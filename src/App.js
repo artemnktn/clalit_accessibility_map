@@ -25,7 +25,7 @@ function App() {
 
   // Load real data from JSON file
   useEffect(() => {
-    fetch('/demographics_accessibility.json')
+    fetch(process.env.PUBLIC_URL + '/demographics_accessibility.json')
       .then(response => response.json())
       .then(data => {
         // Transform data to match our expected format
@@ -117,9 +117,9 @@ function App() {
           };
           img.onerror = () => {
             // eslint-disable-next-line no-console
-            console.warn('Failed to load /clalit-icon.svg. Place it in public/.');
+            console.warn('Failed to load clalit-icon.svg. Place it in public/.');
           };
-          img.src = '/clalit-icon.svg';
+          img.src = process.env.PUBLIC_URL + '/clalit-icon.svg';
         }
       };
 
@@ -294,19 +294,19 @@ function App() {
 
         <div className="icons-row" ref={iconsRowRef}>
           <img
-            src="/walk.png"
+            src={process.env.PUBLIC_URL + "/walk.png"}
             alt="Walk"
             className={`icon-img ${mode === 'walk' ? 'active' : ''}`}
             style={{ left: iconLefts.walk }}
           />
           <img
-            src="/car.png"
+            src={process.env.PUBLIC_URL + "/car.png"}
             alt="Car"
             className={`icon-img ${mode === 'car' ? 'active' : ''}`}
             style={{ left: iconLefts.car }}
           />
           <img
-            src="/transit.png"
+            src={process.env.PUBLIC_URL + "/transit.png"}
             alt="Transit"
             className={`icon-img ${mode === 'transit' ? 'active' : ''}`}
             style={{ left: iconLefts.transit }}
@@ -402,7 +402,7 @@ function App() {
           <div className="divider" />
 
           <div className="card-text" style={{ color: '#666' }}>in collaboration with</div>
-          <img src="/nur-logo.png" alt="Negev Urban Research" className="age-logo" />
+          <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
         </div>
       </div>
 
