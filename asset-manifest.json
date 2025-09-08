@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/clalit_accessibility_map/static/css/main.4eb29722.css",
+    "main.js": "/clalit_accessibility_map/static/js/main.28edf412.js",
+    "static/js/453.72a71473.chunk.js": "/clalit_accessibility_map/static/js/453.72a71473.chunk.js",
+    "index.html": "/clalit_accessibility_map/index.html",
+    "main.4eb29722.css.map": "/clalit_accessibility_map/static/css/main.4eb29722.css.map",
+    "main.28edf412.js.map": "/clalit_accessibility_map/static/js/main.28edf412.js.map",
+    "453.72a71473.chunk.js.map": "/clalit_accessibility_map/static/js/453.72a71473.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.4eb29722.css",
+    "static/js/main.28edf412.js"
+  ]
+}
