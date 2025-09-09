@@ -25,6 +25,7 @@ function App() {
   const [isAgeCardCollapsed, setIsAgeCardCollapsed] = useState(true);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState('above');
+  const [updateTimeout, setUpdateTimeout] = useState(null);
 
   // Load real data from JSON file
   useEffect(() => {
@@ -285,8 +286,15 @@ function App() {
 
   // Update heatmap when mode, range, or map loads
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !map.isStyleLoaded()) return;
+    // Clear any pending updates
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+    }
+
+    // Debounce updates to prevent excessive redraws
+    const timeoutId = setTimeout(() => {
+      const map = mapRef.current;
+      if (!map || !mapLoaded || !map.isStyleLoaded()) return;
     
     // Check if layer exists before trying to access it
     if (!map.getLayer(heatmapLayerId)) {
@@ -298,52 +306,94 @@ function App() {
     const heatLayer = map.getLayer(heatmapLayerId);
     const column = `${mode}_${rangeMin}min`;
 
-    // Ensure layer is visible
-    try { map.setLayoutProperty(heatmapLayerId, 'visibility', 'visible'); } catch (_) {}
+    // Batch all updates to prevent multiple redraws
+    const updates = [];
 
-    // Filter features to 0 < value <= selected range
+    // Ensure layer is visible (only if not already visible)
     try {
-      map.setFilter(heatmapLayerId, [
-        'all',
-        ['>', ['coalesce', ['to-number', ['get', column]], 0], 0],
-        ['<=', ['coalesce', ['to-number', ['get', column]], 0], rangeMin]
-      ]);
+      const currentVisibility = map.getLayoutProperty(heatmapLayerId, 'visibility');
+      if (currentVisibility !== 'visible') {
+        updates.push(() => map.setLayoutProperty(heatmapLayerId, 'visibility', 'visible'));
+      }
     } catch (_) {}
 
-    // Gradient color ramp driven by selected column value
-    // Use minutes directly within [0, rangeMin]
-    const rawValue = ['coalesce', ['to-number', ['get', column]], 0];
-    const value = rawValue;
+    // Filter features to 0 < value <= selected range
+    const newFilter = [
+      'all',
+      ['>', ['coalesce', ['to-number', ['get', column]], 0], 0],
+      ['<=', ['coalesce', ['to-number', ['get', column]], 0], rangeMin]
+    ];
+    
+    try {
+      const currentFilter = map.getFilter(heatmapLayerId);
+      if (JSON.stringify(currentFilter) !== JSON.stringify(newFilter)) {
+        updates.push(() => map.setFilter(heatmapLayerId, newFilter));
+      }
+    } catch (_) {
+      updates.push(() => map.setFilter(heatmapLayerId, newFilter));
+    }
 
-    // Adaptive ramp: 0 -> mid -> max(selected range)
+    // Gradient color ramp driven by selected column value
+    const rawValue = ['coalesce', ['to-number', ['get', column]], 0];
     const maxRange = rangeMin; // 10/15/20/30 depending on selection
     const midRange = maxRange / 2;
     const colorRamp = [
-      'interpolate', ['linear'], value,
+      'interpolate', ['linear'], rawValue,
       0, '#0C7A2A',
       midRange, '#7EEA45',
       maxRange, '#FFD400'
     ];
 
+    // Apply paint properties based on layer type
     try {
       if (heatLayer.type === 'heatmap') {
-        map.setPaintProperty(heatmapLayerId, 'heatmap-color', colorRamp);
-        map.setPaintProperty(heatmapLayerId, 'heatmap-radius', 18);
-        map.setPaintProperty(heatmapLayerId, 'heatmap-intensity', 1.1);
-        map.setPaintProperty(heatmapLayerId, 'heatmap-opacity', 0.9);
+        updates.push(() => {
+          map.setPaintProperty(heatmapLayerId, 'heatmap-color', colorRamp);
+          map.setPaintProperty(heatmapLayerId, 'heatmap-radius', 18);
+          map.setPaintProperty(heatmapLayerId, 'heatmap-intensity', 1.1);
+          map.setPaintProperty(heatmapLayerId, 'heatmap-opacity', 0.9);
+        });
       } else if (heatLayer.type === 'fill') {
-        // Make sure pattern/outline do not override fill color
-        try { map.setPaintProperty(heatmapLayerId, 'fill-pattern', null); } catch (_) {}
-        map.setPaintProperty(heatmapLayerId, 'fill-color', colorRamp);
-        map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0.9);
-        map.setPaintProperty(heatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+        updates.push(() => {
+          try { map.setPaintProperty(heatmapLayerId, 'fill-pattern', null); } catch (_) {}
+          map.setPaintProperty(heatmapLayerId, 'fill-color', colorRamp);
+          map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0.9);
+          map.setPaintProperty(heatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+        });
       } else if (heatLayer.type === 'circle') {
-        map.setPaintProperty(heatmapLayerId, 'circle-color', colorRamp);
-        map.setPaintProperty(heatmapLayerId, 'circle-opacity', 0.9);
-        map.setPaintProperty(heatmapLayerId, 'circle-radius', 6);
+        updates.push(() => {
+          map.setPaintProperty(heatmapLayerId, 'circle-color', colorRamp);
+          map.setPaintProperty(heatmapLayerId, 'circle-opacity', 0.9);
+          map.setPaintProperty(heatmapLayerId, 'circle-radius', 6);
+        });
       }
     } catch (_) {}
-  }, [mode, rangeMin, mapLoaded, heatmapLayerId]);
+
+    // Execute all updates in a single batch to minimize redraws
+    if (updates.length > 0) {
+      // Use requestAnimationFrame to batch updates
+      requestAnimationFrame(() => {
+        updates.forEach(update => {
+          try {
+            update();
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn('Error applying map update:', e);
+          }
+        });
+      });
+    }
+    }, 100); // 100ms debounce
+
+    setUpdateTimeout(timeoutId);
+
+    // Cleanup function
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [mode, rangeMin, mapLoaded, heatmapLayerId, updateTimeout]);
 
   // Position icons exactly above button centers without moving the buttons
   useEffect(() => {
