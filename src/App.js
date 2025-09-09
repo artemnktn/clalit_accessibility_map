@@ -22,6 +22,9 @@ function App() {
   const [iconLefts, setIconLefts] = useState({ walk: 0, car: 0, transit: 0 });
   const [ageGroup, setAgeGroup] = useState('5-18');
   const [coverageData, setCoverageData] = useState(null);
+  const [isAgeCardCollapsed, setIsAgeCardCollapsed] = useState(true);
+  const [popupData, setPopupData] = useState(null);
+  const [popupPosition, setPopupPosition] = useState('above');
 
   // Load real data from JSON file
   useEffect(() => {
@@ -62,6 +65,8 @@ function App() {
       style: 'mapbox://styles/artemnktn/cmfaql8ym003q01sdadp15oqe',
       center: [34.791462, 31.252973],
       zoom: 13,
+      minZoom: 11,
+      maxZoom: 15,
     });
 
     mapRef.current = map;
@@ -108,6 +113,59 @@ function App() {
                   try { map.setLayoutProperty(symbolLayerId, 'visibility', 'visible'); } catch (_) {}
                   // Ensure POI is visible by default
                   setPoiVisible(true);
+                  
+                  // Add click handler for popup
+                  map.on('click', symbolLayerId, (e) => {
+                    const features = e.features;
+                    if (features && features.length > 0) {
+                      const feature = features[0];
+                      const point = map.project(e.lngLat);
+                      
+                      // Get popup dimensions (approximate)
+                      const popupWidth = 300;
+                      const popupHeight = 200;
+                      const margin = 20;
+                      
+                      // Calculate adjusted position to keep popup within screen bounds
+                      let adjustedX = point.x;
+                      let adjustedY = point.y;
+                      
+                      // Check right boundary
+                      if (point.x + popupWidth / 2 > window.innerWidth - margin) {
+                        adjustedX = window.innerWidth - popupWidth / 2 - margin;
+                      }
+                      
+                      // Check left boundary
+                      if (point.x - popupWidth / 2 < margin) {
+                        adjustedX = popupWidth / 2 + margin;
+                      }
+                      
+                      // Check top boundary (popup appears above the point)
+                      let position = 'above';
+                      if (point.y - popupHeight < margin) {
+                        adjustedY = point.y + popupHeight / 2 + 20; // Show below point instead
+                        position = 'below';
+                      }
+                      
+                      setPopupData({
+                        coordinates: {
+                          x: adjustedX,
+                          y: adjustedY
+                        },
+                        properties: feature.properties
+                      });
+                      setPopupPosition(position);
+                    }
+                  });
+                  
+                  // Change cursor on hover
+                  map.on('mouseenter', symbolLayerId, () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                  });
+                  
+                  map.on('mouseleave', symbolLayerId, () => {
+                    map.getCanvas().style.cursor = '';
+                  });
                 }
               }
             } catch (e) {
@@ -179,7 +237,7 @@ function App() {
     return () => {
       map.remove();
     };
-  }, []);
+  }, [mode, rangeMin]);
 
   const togglePoi = () => {
     const map = mapRef.current;
@@ -359,10 +417,17 @@ function App() {
         </div>
 
         {/* Coverage by Age group card */}
-        <div className="age-card">
-          <div className="section-title">Coverage of City by the Age group</div>
+                      <div className="age-card">
+                        <div className="age-card-header" onClick={() => setIsAgeCardCollapsed(!isAgeCardCollapsed)}>
+                          <div className="section-title">Coverage of City by the Age group</div>
+                          <div className="collapse-button">
+                            {isAgeCardCollapsed ? '+' : '−'}
+                          </div>
+                        </div>
 
-          <div className="age-buttons">
+                        {!isAgeCardCollapsed && (
+                          <>
+                            <div className="age-buttons">
             {['0-4', '5-18', '19-64', '65+'].map((g) => (
               <button
                 key={g}
@@ -402,8 +467,17 @@ function App() {
           <div className="divider" />
 
           <div className="card-text" style={{ color: '#666' }}>in collaboration with</div>
-          <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
-        </div>
+          <a 
+            href="https://www.nurlab.org/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="nur-logo-link"
+          >
+            <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
+                        </a>
+                          </>
+                        )}
+                      </div>
       </div>
 
       {/* Adaptive legend bottom-right */}
@@ -418,6 +492,117 @@ function App() {
           <span>{rangeMin} min</span>
         </div>
       </div>
+
+      {/* Simple popup */}
+      {popupData && (
+        <div className="popup-overlay">
+          <div 
+            className={`popup-content ${popupPosition === 'below' ? 'below' : ''}`}
+            style={{
+              left: popupData.coordinates.x,
+              top: popupData.coordinates.y
+            }}
+          >
+            <div className="popup-header">
+              <div>
+                <h3>{popupData.properties.neighborhood || 'Clinic Information'}</h3>
+                {popupData.properties.name && (
+                  <p className="popup-subtitle">{popupData.properties.name}</p>
+                )}
+              </div>
+              <button className="popup-close" onClick={() => setPopupData(null)}>×</button>
+            </div>
+            <div className="popup-body">
+              {/* Pie Chart for categories */}
+              <div className="pie-chart-container">
+                <svg width="120" height="120" className="pie-chart">
+                  {(() => {
+                    const categories = ['community', 'education', 'food', 'healthcare', 'recreation', 'retail', 'services', 'transport'];
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+                    const data = categories.map(cat => ({
+                      name: cat,
+                      value: parseFloat(popupData.properties[cat]) || 0,
+                      color: colors[categories.indexOf(cat)]
+                    })).filter(item => item.value > 0);
+                    
+                    if (data.length === 0) return null;
+                    
+                    const total = data.reduce((sum, item) => sum + item.value, 0);
+                    let currentAngle = 0;
+                    
+                    return data.map((item, index) => {
+                      // const percentage = (item.value / total) * 100;
+                      const angle = (item.value / total) * 360;
+                      const startAngle = currentAngle;
+                      const endAngle = currentAngle + angle;
+                      currentAngle += angle;
+                      
+                      const radius = 50;
+                      const centerX = 60;
+                      const centerY = 60;
+                      
+                      const startAngleRad = (startAngle - 90) * Math.PI / 180;
+                      const endAngleRad = (endAngle - 90) * Math.PI / 180;
+                      
+                      const x1 = centerX + radius * Math.cos(startAngleRad);
+                      const y1 = centerY + radius * Math.sin(startAngleRad);
+                      const x2 = centerX + radius * Math.cos(endAngleRad);
+                      const y2 = centerY + radius * Math.sin(endAngleRad);
+                      
+                      const largeArcFlag = angle > 180 ? 1 : 0;
+                      
+                      const innerRadius = 20;
+                      const innerStartAngleRad = (startAngle - 90) * Math.PI / 180;
+                      const innerEndAngleRad = (endAngle - 90) * Math.PI / 180;
+                      
+                      const innerX1 = centerX + innerRadius * Math.cos(innerStartAngleRad);
+                      const innerY1 = centerY + innerRadius * Math.sin(innerStartAngleRad);
+                      const innerX2 = centerX + innerRadius * Math.cos(innerEndAngleRad);
+                      const innerY2 = centerY + innerRadius * Math.sin(innerEndAngleRad);
+                      
+                      const pathData = [
+                        `M ${x1} ${y1}`,
+                        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                        `L ${innerX2} ${innerY2}`,
+                        `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerX1} ${innerY1}`,
+                        'Z'
+                      ].join(' ');
+                      
+                      return (
+                        <path
+                          key={index}
+                          d={pathData}
+                          fill={item.color}
+                          stroke="white"
+                          strokeWidth="2"
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+                
+                {/* Legend */}
+                <div className="pie-legend">
+                  {(() => {
+                    const categories = ['community', 'education', 'food', 'healthcare', 'recreation', 'retail', 'services', 'transport'];
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+                    return categories.map((cat, index) => {
+                      const value = parseFloat(popupData.properties[cat]) || 0;
+                      if (value === 0) return null;
+                      return (
+                        <div key={cat} className="legend-item">
+                          <div className="legend-color" style={{ backgroundColor: colors[index] }}></div>
+                          <span className="legend-label">{cat}</span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

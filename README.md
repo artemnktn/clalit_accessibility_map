@@ -2,17 +2,6 @@
 
 Interactive map application showing accessibility to Clalit clinics in Be'er-Sheva, Israel.
 
-## Features
-
-- 🗺️ **Interactive Mapbox Map** with custom Clalit clinic icons
-- ✨ **Glassmorphism UI** with modern design
-- 🚶‍♂️ **Transport Modes**: Walk, Car, Transit
-- ⏱️ **Accessibility Ranges**: 10, 15, 20, 30 minutes
-- 👥 **Age Groups**: 0-4, 5-18, 19-64, 65+ years
-- 📊 **Real Data Integration** from demographics JSON
-- 📱 **Mobile Responsive** design
-- 🎨 **Adaptive Legend** with color-coded accessibility
-
 ## Technology Stack
 
 - **React.js** - Frontend framework
@@ -58,7 +47,6 @@ npm start
 - Age-specific coverage statistics
 
 ### UI/UX
-- Modern glassmorphism design
 - Mobile-optimized interface
 - Intuitive controls and legends
 

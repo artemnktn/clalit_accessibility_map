@@ -214,6 +214,181 @@
   text-align: left;
 }
 
+.age-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  margin-top: 8px;
+}
+
+.collapse-button {
+  font-size: 18px;
+  color: #333;
+  background: none;
+  border: none;
+  transition: color 0.2s ease;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: -12px;
+}
+
+.collapse-button:hover {
+  color: #666;
+}
+
+/* Simple popup styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.popup-content {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  padding: 24px 28px;
+  max-width: 300px;
+  overflow: visible;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+}
+
+.popup-content.below {
+  transform: translate(-50%, 0%);
+  margin-top: 10px;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 12px;
+}
+
+.popup-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.popup-subtitle {
+  margin: 4px 0 0 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.popup-header > div {
+  text-align: left;
+  flex: 1;
+}
+
+.popup-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.popup-body {
+  overflow: visible;
+}
+
+.popup-row {
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.popup-row:last-child {
+  border-bottom: none;
+}
+
+.popup-row strong {
+  color: #333;
+  margin-right: 8px;
+}
+
+/* Pie Chart styles */
+.pie-chart-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.pie-chart {
+  flex-shrink: 0;
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  text-align: left;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  color: #333;
+  font-weight: 500;
+  text-align: left;
+  font-size: 12px;
+}
+
 .age-title { display: none; }
 
 .age-buttons { display: flex; gap: 12px; margin-bottom: 12px; }
@@ -233,6 +408,11 @@
 .age-divider { height: 2px; background: #eaeaea; margin: 16px 0; }
 .age-collab { font-size: 16px; color: #666; margin-bottom: 6px; }
 .age-logo { height: 40px; opacity: 0.8; }
+
+.nur-logo-link {
+  display: inline-block;
+  text-decoration: none;
+}
 
 /* iOS-like switch */
 .switch {
