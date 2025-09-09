@@ -72,14 +72,19 @@ function App() {
     mapRef.current = map;
 
     map.on('load', () => {
-      const hasLayer = map.getLayer(poiLayerId);
-      if (!hasLayer) {
+      try {
+        const hasLayer = map.getLayer(poiLayerId);
+        if (!hasLayer) {
+          // eslint-disable-next-line no-console
+          console.warn(`Layer not found in style: ${poiLayerId}`);
+        } else {
+          // Always set POI layer to visible on first load
+          try { map.setLayoutProperty(poiLayerId, 'visibility', 'visible'); } catch (_) {}
+          setPoiVisible(true);
+        }
+      } catch (e) {
         // eslint-disable-next-line no-console
-        console.warn(`Layer not found in style: ${poiLayerId}`);
-      } else {
-        // Always set POI layer to visible on first load
-        try { map.setLayoutProperty(poiLayerId, 'visibility', 'visible'); } catch (_) {}
-        setPoiVisible(true);
+        console.warn('Error checking POI layer:', e);
       }
 
       // Load custom icon for POI layer
@@ -94,7 +99,8 @@ function App() {
               const layerDef = map.getStyle().layers.find((l) => l.id === poiLayerId);
               if (layerDef && layerDef.source && layerDef['source-layer']) {
                 const symbolLayerId = 'clalit-poi-icons';
-                if (!map.getLayer(symbolLayerId)) {
+                try {
+                  if (!map.getLayer(symbolLayerId)) {
                   map.addLayer({
                     id: symbolLayerId,
                     type: 'symbol',
@@ -167,6 +173,10 @@ function App() {
                     map.getCanvas().style.cursor = '';
                   });
                 }
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn('Error checking symbol layer:', e);
+                }
               }
             } catch (e) {
               // eslint-disable-next-line no-console
@@ -186,7 +196,8 @@ function App() {
       
       // Force initial heatmap update after a short delay to ensure style is fully loaded
       setTimeout(() => {
-        const heatLayer = map.getLayer(heatmapLayerId);
+        try {
+          const heatLayer = map.getLayer(heatmapLayerId);
         if (heatLayer) {
           const column = `${mode}_${rangeMin}min`;
           // eslint-disable-next-line no-console
@@ -231,13 +242,18 @@ function App() {
             console.warn('Failed to set heatmap properties:', e);
           }
         }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Error accessing heatmap layer:', e);
+        }
       }, 1000);
     });
 
     return () => {
       map.remove();
     };
-  }, [mode, rangeMin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const togglePoi = () => {
     const map = mapRef.current;
@@ -246,11 +262,24 @@ function App() {
     
     // Toggle symbol layer if it exists, otherwise toggle original layer
     const symbolLayerId = 'clalit-poi-icons';
-    const layerToToggle = map.getLayer(symbolLayerId) ? symbolLayerId : poiLayerId;
+    let layerToToggle = poiLayerId;
     
-    if (map.getLayer(layerToToggle)) {
-      map.setLayoutProperty(layerToToggle, 'visibility', nextVisible ? 'visible' : 'none');
-      setPoiVisible(nextVisible);
+    try {
+      if (map.getLayer(symbolLayerId)) {
+        layerToToggle = symbolLayerId;
+      }
+    } catch (e) {
+      // Layer doesn't exist, use original layer
+    }
+    
+    try {
+      if (map.getLayer(layerToToggle)) {
+        map.setLayoutProperty(layerToToggle, 'visibility', nextVisible ? 'visible' : 'none');
+        setPoiVisible(nextVisible);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Error toggling POI layer:', e);
     }
   };
 
@@ -258,13 +287,15 @@ function App() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !map.isStyleLoaded()) return;
-    const heatLayer = map.getLayer(heatmapLayerId);
-    if (!heatLayer) {
+    
+    // Check if layer exists before trying to access it
+    if (!map.getLayer(heatmapLayerId)) {
       // eslint-disable-next-line no-console
       console.warn(`Heatmap layer not found: ${heatmapLayerId}`);
       return;
     }
 
+    const heatLayer = map.getLayer(heatmapLayerId);
     const column = `${mode}_${rangeMin}min`;
 
     // Ensure layer is visible
@@ -312,7 +343,7 @@ function App() {
         map.setPaintProperty(heatmapLayerId, 'circle-radius', 6);
       }
     } catch (_) {}
-  }, [mode, rangeMin, mapLoaded]);
+  }, [mode, rangeMin, mapLoaded, heatmapLayerId]);
 
   // Position icons exactly above button centers without moving the buttons
   useEffect(() => {
