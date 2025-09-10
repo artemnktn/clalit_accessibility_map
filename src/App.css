@@ -307,6 +307,7 @@
   font-weight: 800;
   font-size: 14px;
   margin-top: 8px;
+  margin-right: 44px; /* Account for 3D button width + gap */
 }
 
 /* Age group card */
@@ -713,6 +714,7 @@
   
   .legend-labels {
     font-size: 10px;
+    margin-right: 36px; /* Account for smaller 3D button on mobile */
   }
 }
 
