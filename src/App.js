@@ -444,6 +444,19 @@ function App() {
                     });
                     // eslint-disable-next-line no-console
                     console.log('Created 3D extrusion layer:', extrusionLayerId);
+                    
+                    // Move POI layer above 3D extrusion layer
+                    const symbolLayerId = 'clalit-poi-icons';
+                    if (map.getLayer(symbolLayerId)) {
+                      try {
+                        map.moveLayer(symbolLayerId);
+                        // eslint-disable-next-line no-console
+                        console.log('Moved POI layer above 3D extrusion');
+                      } catch (e) {
+                        // eslint-disable-next-line no-console
+                        console.warn('Error moving POI layer:', e);
+                      }
+                    }
                   }
                 } catch (e) {
                   // eslint-disable-next-line no-console
@@ -455,6 +468,17 @@ function App() {
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-height', extrusionHeight);
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-opacity', 1.0);
                 map.setFilter(extrusionLayerId, map.getFilter(heatmapLayerId));
+                
+                // Ensure POI layer is above 3D extrusion layer
+                const symbolLayerId = 'clalit-poi-icons';
+                if (map.getLayer(symbolLayerId)) {
+                  try {
+                    map.moveLayer(symbolLayerId);
+                  } catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.warn('Error moving POI layer:', e);
+                  }
+                }
               }
               
               // Hide original layer when in 3D mode
