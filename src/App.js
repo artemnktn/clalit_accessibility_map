@@ -410,25 +410,17 @@ function App() {
             
             // Add 3D extrusion if in 3D mode
             if (is3DMode) {
-              // Create 3D extrusion based on data values - much higher for visibility
+              // Create 3D extrusion based on data values - INVERTED: high values = high extrusion
               const extrusionHeight = [
                 'interpolate',
                 ['linear'],
                 rawValue,
-                0, 0,
-                maxRange, 500 // Much higher for better visibility
+                0, 500,           // Low values = high extrusion (inverted)
+                maxRange, 0       // High values = low extrusion (inverted)
               ];
               
-              // Create height-based color ramp for 3D extrusion
-              const heightColorRamp = [
-                'interpolate',
-                ['linear'],
-                rawValue,
-                0, '#ff0000',      // Red for low values
-                maxRange * 0.3, '#ffff00',  // Yellow for medium values
-                maxRange * 0.7, '#00ff00',  // Green for high values
-                maxRange, '#0000ff'         // Blue for highest values
-              ];
+              // Use same color ramp as 2D mode for consistency
+              const heightColorRamp = colorRamp;
               
               // Try to create a new fill-extrusion layer if it doesn't exist
               const extrusionLayerId = heatmapLayerId + '-3d';
@@ -607,23 +599,6 @@ function App() {
 
         <div className="divider" />
 
-        <div className="section-title">3D Data View</div>
-        <p className="section-text">
-          Toggle 3D extrusion of accessibility data by height
-        </p>
-        
-        <div className="toggle-3d-container">
-          <button
-            className={`toggle-3d-btn ${is3DMode ? 'active' : ''}`}
-            onClick={toggle3D}
-          >
-            <span className="toggle-3d-icon">🏔️</span>
-            <span className="toggle-3d-text">{is3DMode ? '3D ON' : '3D OFF'}</span>
-          </button>
-        </div>
-
-        <div className="divider" />
-
         <div className="section-title">Select Accessibility Range</div>
         <p className="section-text">
           See how far people can reach in 10, 20, or 30 minutes of travel
@@ -707,12 +682,21 @@ function App() {
                       </div>
       </div>
 
-      {/* Adaptive legend bottom-right */}
+      {/* Adaptive legend bottom-right with 3D toggle */}
       <div className="legend">
-        <div
-          className="legend-bar"
-          style={{ background: 'linear-gradient(90deg, #0C7A2A 0%, #7EEA45 50%, #FFD400 100%)' }}
-        />
+        <div className="legend-header">
+          <div
+            className="legend-bar"
+            style={{ background: 'linear-gradient(90deg, #0C7A2A 0%, #7EEA45 50%, #FFD400 100%)' }}
+          />
+          <button
+            className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
+            onClick={toggle3D}
+            title="Toggle 3D extrusion"
+          >
+            <span className="legend-3d-icon">🏔️</span>
+          </button>
+        </div>
         <div className="legend-labels">
           <span>0 min</span>
           <span>{Math.round(rangeMin / 2)} min</span>
@@ -834,5 +818,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
