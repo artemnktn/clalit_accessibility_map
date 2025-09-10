@@ -292,67 +292,17 @@ function App() {
     setIs3DMode(next3DMode);
     
     if (next3DMode) {
-      // Enable 3D terrain and buildings
+      // Enable 3D mode - only heatmap extrusion, no terrain
       try {
-        map.addSource('mapbox-dem', {
-          'type': 'raster-dem',
-          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          'tileSize': 512,
-          'maxzoom': 14
-        });
-        
-        // Add terrain
-        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-        
-        // Add sky layer
-        map.addLayer({
-          'id': 'sky',
-          'type': 'sky',
-          'paint': {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 0.0],
-            'sky-atmosphere-sun-intensity': 15
-          }
-        });
-        
-        // Enable 3D buildings
-        map.addLayer({
-          'id': '3d-buildings',
-          'source': 'composite',
-          'source-layer': 'building',
-          'filter': ['==', 'extrude', 'true'],
-          'type': 'fill-extrusion',
-          'minzoom': 15,
-          'paint': {
-            'fill-extrusion-color': '#aaa',
-            'fill-extrusion-height': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              15,
-              0,
-              15.05,
-              ['get', 'height']
-            ],
-            'fill-extrusion-base': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              15,
-              0,
-              15.05,
-              ['get', 'min_height']
-            ],
-            'fill-extrusion-opacity': 0.6
-          }
-        });
-        
-        // Set 3D camera
+        // Set 3D camera for better view of extruded data
         map.easeTo({
-          pitch: 60,
-          bearing: -17.6,
+          pitch: 45,
+          bearing: 0,
           duration: 2000
         });
+        
+        // eslint-disable-next-line no-console
+        console.log('3D mode enabled - heatmap extrusion only');
         
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -361,17 +311,15 @@ function App() {
     } else {
       // Disable 3D mode
       try {
-        map.setTerrain(null);
-        if (map.getLayer('sky')) map.removeLayer('sky');
-        if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings');
-        if (map.getSource('mapbox-dem')) map.removeSource('mapbox-dem');
-        
-        // Reset camera
+        // Reset camera to flat view
         map.easeTo({
           pitch: 0,
           bearing: 0,
           duration: 2000
         });
+        
+        // eslint-disable-next-line no-console
+        console.log('3D mode disabled');
         
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -462,23 +410,27 @@ function App() {
             
             // Add 3D extrusion if in 3D mode
             if (is3DMode) {
-              // Convert fill layer to fill-extrusion for 3D effect
-              const source = map.getSource(heatLayer.source);
-              if (source && source.type === 'vector') {
-                // Create 3D extrusion based on data values
-                const extrusionHeight = [
-                  'interpolate',
-                  ['linear'],
-                  rawValue,
-                  0, 0,
-                  maxRange, 100 // Max height in meters
-                ];
-                
-                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-color', colorRamp);
-                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', extrusionHeight);
-                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-base', 0);
-                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0.8);
-              }
+              // Create 3D extrusion based on data values
+              const extrusionHeight = [
+                'interpolate',
+                ['linear'],
+                rawValue,
+                0, 0,
+                maxRange, 200 // Max height in meters for better visibility
+              ];
+              
+              // Apply extrusion properties
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-color', colorRamp);
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', extrusionHeight);
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-base', 0);
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0.9);
+              
+              // Hide regular fill properties when in 3D mode
+              map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0);
+            } else {
+              // Show regular fill properties when not in 3D mode
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', 0);
+              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0);
             }
           } catch (e) {
             // eslint-disable-next-line no-console
@@ -494,6 +446,7 @@ function App() {
             
             // Add 3D extrusion for circles if in 3D mode
             if (is3DMode) {
+              // eslint-disable-next-line no-unused-vars
               const extrusionHeight = [
                 'interpolate',
                 ['linear'],
@@ -612,9 +565,9 @@ function App() {
 
         <div className="divider" />
 
-        <div className="section-title">3D View</div>
+        <div className="section-title">3D Data View</div>
         <p className="section-text">
-          Toggle 3D terrain and extruded heatmap visualization
+          Toggle 3D extrusion of accessibility data by height
         </p>
         
         <div className="toggle-3d-container">
