@@ -296,7 +296,7 @@ function App() {
       try {
         // Set 3D camera for better view of extruded data
         map.easeTo({
-          pitch: 45,
+          pitch: 60,
           bearing: 0,
           duration: 2000
         });
@@ -345,7 +345,7 @@ function App() {
     
     // Debug logging
     // eslint-disable-next-line no-console
-    console.log('Updating heatmap:', { mode, rangeMin, column, layerType: heatLayer?.type });
+    console.log('Updating heatmap:', { mode, rangeMin, column, layerType: heatLayer?.type, is3DMode });
 
     // Batch all updates to prevent multiple redraws
     const updates = [];
@@ -410,27 +410,69 @@ function App() {
             
             // Add 3D extrusion if in 3D mode
             if (is3DMode) {
-              // Create 3D extrusion based on data values
+              // Create 3D extrusion based on data values - much higher for visibility
               const extrusionHeight = [
                 'interpolate',
                 ['linear'],
                 rawValue,
                 0, 0,
-                maxRange, 200 // Max height in meters for better visibility
+                maxRange, 500 // Much higher for better visibility
               ];
               
-              // Apply extrusion properties
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-color', colorRamp);
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', extrusionHeight);
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-base', 0);
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0.9);
+              // Create height-based color ramp for 3D extrusion
+              const heightColorRamp = [
+                'interpolate',
+                ['linear'],
+                rawValue,
+                0, '#ff0000',      // Red for low values
+                maxRange * 0.3, '#ffff00',  // Yellow for medium values
+                maxRange * 0.7, '#00ff00',  // Green for high values
+                maxRange, '#0000ff'         // Blue for highest values
+              ];
               
-              // Hide regular fill properties when in 3D mode
+              // Try to create a new fill-extrusion layer if it doesn't exist
+              const extrusionLayerId = heatmapLayerId + '-3d';
+              if (!map.getLayer(extrusionLayerId)) {
+                try {
+                  const source = map.getSource(heatLayer.source);
+                  if (source) {
+                    map.addLayer({
+                      id: extrusionLayerId,
+                      type: 'fill-extrusion',
+                      source: heatLayer.source,
+                      'source-layer': heatLayer['source-layer'],
+                      filter: map.getFilter(heatmapLayerId),
+                      paint: {
+                        'fill-extrusion-color': heightColorRamp,
+                        'fill-extrusion-height': extrusionHeight,
+                        'fill-extrusion-base': 0,
+                        'fill-extrusion-opacity': 1.0,
+                        'fill-extrusion-vertical-gradient': false
+                      }
+                    });
+                    // eslint-disable-next-line no-console
+                    console.log('Created 3D extrusion layer:', extrusionLayerId);
+                  }
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn('Error creating 3D extrusion layer:', e);
+                }
+              } else {
+                // Update existing extrusion layer
+                map.setPaintProperty(extrusionLayerId, 'fill-extrusion-color', heightColorRamp);
+                map.setPaintProperty(extrusionLayerId, 'fill-extrusion-height', extrusionHeight);
+                map.setPaintProperty(extrusionLayerId, 'fill-extrusion-opacity', 1.0);
+                map.setFilter(extrusionLayerId, map.getFilter(heatmapLayerId));
+              }
+              
+              // Hide original layer when in 3D mode
               map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0);
             } else {
-              // Show regular fill properties when not in 3D mode
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', 0);
-              map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0);
+              // Show original layer and hide 3D extrusion when not in 3D mode
+              const extrusionLayerId = heatmapLayerId + '-3d';
+              if (map.getLayer(extrusionLayerId)) {
+                map.setPaintProperty(extrusionLayerId, 'fill-extrusion-opacity', 0);
+              }
             }
           } catch (e) {
             // eslint-disable-next-line no-console
