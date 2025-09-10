@@ -718,7 +718,7 @@ function App() {
             onClick={toggle3D}
             title="Toggle 3D extrusion"
           >
-            <span className="legend-3d-icon">🏔️</span>
+            <span className="legend-3d-text">3D</span>
           </button>
         </div>
         <div className="legend-labels">
