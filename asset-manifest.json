@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/clalit_accessibility_map/static/css/main.5764554b.css",
-    "main.js": "/clalit_accessibility_map/static/js/main.525cefa9.js",
+    "main.js": "/clalit_accessibility_map/static/js/main.022ca489.js",
     "static/js/453.72a71473.chunk.js": "/clalit_accessibility_map/static/js/453.72a71473.chunk.js",
     "index.html": "/clalit_accessibility_map/index.html",
     "main.5764554b.css.map": "/clalit_accessibility_map/static/css/main.5764554b.css.map",
-    "main.525cefa9.js.map": "/clalit_accessibility_map/static/js/main.525cefa9.js.map",
+    "main.022ca489.js.map": "/clalit_accessibility_map/static/js/main.022ca489.js.map",
     "453.72a71473.chunk.js.map": "/clalit_accessibility_map/static/js/453.72a71473.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.5764554b.css",
-    "static/js/main.525cefa9.js"
+    "static/js/main.022ca489.js"
   ]
 }
