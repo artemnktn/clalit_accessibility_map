@@ -164,9 +164,74 @@
   color: #fff;
 }
 
+/* 3D Toggle Button */
+.toggle-3d-container {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.toggle-3d-btn {
+  appearance: none;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.toggle-3d-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.toggle-3d-btn:hover::before {
+  left: 100%;
+}
+
+.toggle-3d-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.toggle-3d-btn.active {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.toggle-3d-btn.active:hover {
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.toggle-3d-icon {
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.toggle-3d-text {
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
 /* Remove blue glow on focus/active */
 .mode-btn:focus, .mode-btn:focus-visible,
 .range-btn:focus, .range-btn:focus-visible,
+.toggle-3d-btn:focus, .toggle-3d-btn:focus-visible,
 .btn:focus, .btn:focus-visible {
   outline: none;
   box-shadow: none;
@@ -542,6 +607,20 @@
     padding: 6px 10px;
     border-radius: 10px;
     font-size: 13px;
+  }
+  
+  .toggle-3d-btn {
+    padding: 10px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+  }
+  
+  .toggle-3d-icon {
+    font-size: 16px;
+  }
+  
+  .toggle-3d-text {
+    font-size: 12px;
   }
   
   .age-card {

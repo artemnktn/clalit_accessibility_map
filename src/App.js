@@ -25,6 +25,7 @@ function App() {
   const [isAgeCardCollapsed, setIsAgeCardCollapsed] = useState(true);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState('above');
+  const [is3DMode, setIs3DMode] = useState(false);
 
   // Load real data from JSON file
   useEffect(() => {
@@ -283,6 +284,102 @@ function App() {
     }
   };
 
+  const toggle3D = () => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    
+    const next3DMode = !is3DMode;
+    setIs3DMode(next3DMode);
+    
+    if (next3DMode) {
+      // Enable 3D terrain and buildings
+      try {
+        map.addSource('mapbox-dem', {
+          'type': 'raster-dem',
+          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          'tileSize': 512,
+          'maxzoom': 14
+        });
+        
+        // Add terrain
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        
+        // Add sky layer
+        map.addLayer({
+          'id': 'sky',
+          'type': 'sky',
+          'paint': {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 0.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
+        });
+        
+        // Enable 3D buildings
+        map.addLayer({
+          'id': '3d-buildings',
+          'source': 'composite',
+          'source-layer': 'building',
+          'filter': ['==', 'extrude', 'true'],
+          'type': 'fill-extrusion',
+          'minzoom': 15,
+          'paint': {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.6
+          }
+        });
+        
+        // Set 3D camera
+        map.easeTo({
+          pitch: 60,
+          bearing: -17.6,
+          duration: 2000
+        });
+        
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('Error enabling 3D mode:', e);
+      }
+    } else {
+      // Disable 3D mode
+      try {
+        map.setTerrain(null);
+        if (map.getLayer('sky')) map.removeLayer('sky');
+        if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings');
+        if (map.getSource('mapbox-dem')) map.removeSource('mapbox-dem');
+        
+        // Reset camera
+        map.easeTo({
+          pitch: 0,
+          bearing: 0,
+          duration: 2000
+        });
+        
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('Error disabling 3D mode:', e);
+      }
+    }
+  };
+
   // Update heatmap when mode, range, or map loads
   useEffect(() => {
     const map = mapRef.current;
@@ -362,6 +459,27 @@ function App() {
             map.setPaintProperty(heatmapLayerId, 'fill-color', colorRamp);
             map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0.9);
             map.setPaintProperty(heatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+            
+            // Add 3D extrusion if in 3D mode
+            if (is3DMode) {
+              // Convert fill layer to fill-extrusion for 3D effect
+              const source = map.getSource(heatLayer.source);
+              if (source && source.type === 'vector') {
+                // Create 3D extrusion based on data values
+                const extrusionHeight = [
+                  'interpolate',
+                  ['linear'],
+                  rawValue,
+                  0, 0,
+                  maxRange, 100 // Max height in meters
+                ];
+                
+                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-color', colorRamp);
+                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-height', extrusionHeight);
+                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-base', 0);
+                map.setPaintProperty(heatmapLayerId, 'fill-extrusion-opacity', 0.8);
+              }
+            }
           } catch (e) {
             // eslint-disable-next-line no-console
             console.warn('Error setting fill properties:', e);
@@ -373,6 +491,20 @@ function App() {
             map.setPaintProperty(heatmapLayerId, 'circle-color', colorRamp);
             map.setPaintProperty(heatmapLayerId, 'circle-opacity', 0.9);
             map.setPaintProperty(heatmapLayerId, 'circle-radius', 6);
+            
+            // Add 3D extrusion for circles if in 3D mode
+            if (is3DMode) {
+              const extrusionHeight = [
+                'interpolate',
+                ['linear'],
+                rawValue,
+                0, 0,
+                maxRange, 50 // Max height in meters for circles
+              ];
+              
+              map.setPaintProperty(heatmapLayerId, 'circle-stroke-width', 2);
+              map.setPaintProperty(heatmapLayerId, 'circle-stroke-color', '#fff');
+            }
           } catch (e) {
             // eslint-disable-next-line no-console
             console.warn('Error setting circle properties:', e);
@@ -395,7 +527,7 @@ function App() {
         });
       });
     }
-  }, [mode, rangeMin, mapLoaded, heatmapLayerId]);
+  }, [mode, rangeMin, mapLoaded, heatmapLayerId, is3DMode]);
 
   // Position icons exactly above button centers without moving the buttons
   useEffect(() => {
@@ -475,6 +607,23 @@ function App() {
             ref={transitBtnRef}
           >
             Transit
+          </button>
+        </div>
+
+        <div className="divider" />
+
+        <div className="section-title">3D View</div>
+        <p className="section-text">
+          Toggle 3D terrain and extruded heatmap visualization
+        </p>
+        
+        <div className="toggle-3d-container">
+          <button
+            className={`toggle-3d-btn ${is3DMode ? 'active' : ''}`}
+            onClick={toggle3D}
+          >
+            <span className="toggle-3d-icon">🏔️</span>
+            <span className="toggle-3d-text">{is3DMode ? '3D ON' : '3D OFF'}</span>
           </button>
         </div>
 
