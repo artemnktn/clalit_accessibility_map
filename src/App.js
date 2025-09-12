@@ -193,6 +193,57 @@ function App() {
       };
 
       loadCustomIcon();
+      
+      // Load new heatmap data source
+      const loadNewHeatmapData = () => {
+        try {
+          // Remove old source if it exists
+          if (map.getSource('clalit-accessibility-heatmap-new')) {
+            map.removeSource('clalit-accessibility-heatmap-new');
+          }
+          
+          // Add new GeoJSON source
+          map.addSource('clalit-accessibility-heatmap-new', {
+            type: 'geojson',
+            data: process.env.PUBLIC_URL + '/accessibility_heatmap_new.geojson'
+          });
+          
+          // Create new heatmap layer using the new data source
+          const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+          if (!map.getLayer(newHeatmapLayerId)) {
+            map.addLayer({
+              id: newHeatmapLayerId,
+              type: 'fill',
+              source: 'clalit-accessibility-heatmap-new',
+              paint: {
+                'fill-color': [
+                  'interpolate',
+                  ['linear'],
+                  ['coalesce', ['to-number', ['get', 'walk_15min']], 0],
+                  0, '#0C7A2A',
+                  7.5, '#7EEA45',
+                  15, '#FFD400'
+                ],
+                'fill-opacity': 0.9,
+                'fill-outline-color': 'rgba(0,0,0,0)'
+              }
+            });
+            
+            // Hide the old layer
+            if (map.getLayer(heatmapLayerId)) {
+              map.setLayoutProperty(heatmapLayerId, 'visibility', 'none');
+            }
+          }
+          
+          // eslint-disable-next-line no-console
+          console.log('Loaded new heatmap data source and created new layer');
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Error loading new heatmap data:', e);
+        }
+      };
+      
+      loadNewHeatmapData();
       setMapLoaded(true);
       
       // Force initial heatmap update after a short delay to ensure style is fully loaded
@@ -333,14 +384,18 @@ function App() {
     const map = mapRef.current;
     if (!map || !mapLoaded || !map.isStyleLoaded()) return;
     
+    // Use new heatmap layer if available, otherwise fall back to old one
+    const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+    const currentHeatmapLayerId = map.getLayer(newHeatmapLayerId) ? newHeatmapLayerId : heatmapLayerId;
+    
     // Check if layer exists before trying to access it
-    if (!map.getLayer(heatmapLayerId)) {
+    if (!map.getLayer(currentHeatmapLayerId)) {
       // eslint-disable-next-line no-console
-      console.warn(`Heatmap layer not found: ${heatmapLayerId}`);
+      console.warn(`Heatmap layer not found: ${currentHeatmapLayerId}`);
       return;
     }
 
-    const heatLayer = map.getLayer(heatmapLayerId);
+    const heatLayer = map.getLayer(currentHeatmapLayerId);
     const column = `${mode}_${rangeMin}min`;
     
     // Debug logging
@@ -352,9 +407,9 @@ function App() {
 
     // Ensure layer is visible (only if not already visible)
     try {
-      const currentVisibility = map.getLayoutProperty(heatmapLayerId, 'visibility');
+      const currentVisibility = map.getLayoutProperty(currentHeatmapLayerId, 'visibility');
       if (currentVisibility !== 'visible') {
-        updates.push(() => map.setLayoutProperty(heatmapLayerId, 'visibility', 'visible'));
+        updates.push(() => map.setLayoutProperty(currentHeatmapLayerId, 'visibility', 'visible'));
       }
     } catch (_) {}
 
@@ -368,7 +423,7 @@ function App() {
     // Always update filter to ensure data changes
     updates.push(() => {
       try {
-        map.setFilter(heatmapLayerId, newFilter);
+        map.setFilter(currentHeatmapLayerId, newFilter);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn('Error setting filter:', e);
@@ -403,10 +458,10 @@ function App() {
       } else if (heatLayer.type === 'fill') {
         updates.push(() => {
           try {
-            map.setPaintProperty(heatmapLayerId, 'fill-pattern', null);
-            map.setPaintProperty(heatmapLayerId, 'fill-color', colorRamp);
-            map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0.9);
-            map.setPaintProperty(heatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+            map.setPaintProperty(currentHeatmapLayerId, 'fill-pattern', null);
+            map.setPaintProperty(currentHeatmapLayerId, 'fill-color', colorRamp);
+            map.setPaintProperty(currentHeatmapLayerId, 'fill-opacity', 0.9);
+            map.setPaintProperty(currentHeatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
             
             // Add 3D extrusion if in 3D mode
             if (is3DMode) {
@@ -423,7 +478,7 @@ function App() {
               const heightColorRamp = colorRamp;
               
               // Try to create a new fill-extrusion layer if it doesn't exist
-              const extrusionLayerId = heatmapLayerId + '-3d';
+              const extrusionLayerId = currentHeatmapLayerId + '-3d';
               if (!map.getLayer(extrusionLayerId)) {
                 try {
                   const source = map.getSource(heatLayer.source);
@@ -467,7 +522,7 @@ function App() {
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-color', heightColorRamp);
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-height', extrusionHeight);
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-opacity', 1.0);
-                map.setFilter(extrusionLayerId, map.getFilter(heatmapLayerId));
+                map.setFilter(extrusionLayerId, map.getFilter(currentHeatmapLayerId));
                 
                 // Ensure POI layer is above 3D extrusion layer
                 const symbolLayerId = 'clalit-poi-icons';
@@ -482,10 +537,10 @@ function App() {
               }
               
               // Hide original layer when in 3D mode
-              map.setPaintProperty(heatmapLayerId, 'fill-opacity', 0);
+              map.setPaintProperty(currentHeatmapLayerId, 'fill-opacity', 0);
             } else {
               // Show original layer and hide 3D extrusion when not in 3D mode
-              const extrusionLayerId = heatmapLayerId + '-3d';
+              const extrusionLayerId = currentHeatmapLayerId + '-3d';
               if (map.getLayer(extrusionLayerId)) {
                 map.setPaintProperty(extrusionLayerId, 'fill-extrusion-opacity', 0);
               }
@@ -538,7 +593,7 @@ function App() {
         });
       });
     }
-  }, [mode, rangeMin, mapLoaded, heatmapLayerId, is3DMode]);
+  }, [mode, rangeMin, mapLoaded, is3DMode]);
 
   // Position icons exactly above button centers without moving the buttons
   useEffect(() => {
