@@ -47,6 +47,24 @@
 
 /* Left-side control panel */
 .side-panel { position: absolute; top: 22px; left: 22px; width: 414px; max-width: calc(100% - 44px); }
+
+/* Top-right age group panel */
+.age-card-top-right {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 320px;
+  max-width: calc(100% - 44px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  padding: 20px 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
+  text-align: left;
+  z-index: 1000;
+}
 .control-card {
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
@@ -95,7 +113,7 @@
 .section-title {
   font-size: 18px;
   font-weight: 800;
-  margin: 0 0 12px 0;
+  margin: 0 0 20px 0;
 }
 
 .section-text {
@@ -249,6 +267,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
+  z-index: 1000;
   padding: 14px 16px 10px 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.05);
 }
@@ -501,7 +520,7 @@
 
 .age-title { display: none; }
 
-.age-buttons { display: flex; gap: 12px; margin-bottom: 12px; }
+.age-buttons { display: flex; gap: 12px; margin-bottom: 24px; }
 .age-btn {
   appearance: none;
   border: none;
@@ -592,6 +611,15 @@
     left: 12px;
     width: calc(100% - 24px);
     max-width: none;
+  }
+  
+  .age-card-top-right {
+    top: 12px;
+    right: 12px;
+    width: calc(100% - 24px);
+    max-width: none;
+    padding: 16px 20px;
+    border-radius: 20px;
   }
   
   .control-card {
@@ -815,4 +843,24 @@
   .legend-labels {
     font-size: 9px;
   }
+}
+
+/* Clinic icon animation - very subtle */
+@keyframes clinic-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+.clinic-icon-animated {
+  animation: clinic-pulse 3s ease-in-out infinite;
 }
