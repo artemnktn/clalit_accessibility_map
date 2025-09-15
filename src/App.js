@@ -642,16 +642,16 @@ function App() {
       }
     });
 
-    // Gradient color ramp driven by selected column value - fixed scale 0-30 min (coolwarm palette)
+    // Gradient color ramp driven by selected column value - fixed scale 0-30 min (inverted coolwarm with green)
     const rawValue = ['coalesce', ['to-number', ['get', column]], 0];
     const maxRange = 30; // Fixed maximum range for all modes
     const colorRamp = [
       'interpolate', ['linear'], rawValue,
-      0, '#8C1446',      // Dark red/purple (coolwarm start)
-      7.5, '#FF6432',    // Orange
+      0, '#3C64B4',      // Blue (best accessibility)
+      7.5, '#64C896',    // Light green/teal
       15, '#FFFFC8',     // Light yellow (neutral)
-      22.5, '#64C896',   // Light green/teal
-      maxRange, '#3C64B4' // Blue (coolwarm end)
+      22.5, '#FF6432',   // Orange
+      maxRange, '#8C1446' // Dark red/purple (worst accessibility)
     ];
 
     // Apply paint properties based on layer type - always update colors
@@ -1158,7 +1158,7 @@ function App() {
         <div className="legend-header">
           <div
             className="legend-bar"
-            style={{ background: 'linear-gradient(90deg, #8C1446 0%, #FF6432 25%, #FFFFC8 50%, #64C896 75%, #3C64B4 100%)' }}
+            style={{ background: 'linear-gradient(90deg, #3C64B4 0%, #64C896 25%, #FFFFC8 50%, #FF6432 75%, #8C1446 100%)' }}
           />
           <button
             className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
