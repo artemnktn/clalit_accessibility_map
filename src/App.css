@@ -690,7 +690,7 @@
   }
   
   .side-panel {
-    top: calc(60vh + 12px);
+    top: calc(10vh + 12px);
     left: 12px;
     width: calc(100% - 24px);
     max-width: none;
@@ -771,23 +771,29 @@
   }
   
   .modes-row {
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   
   .mode-btn {
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
   }
   
   .ranges-row {
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   
   .range-btn {
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
   }
   
   .toggle-3d-btn {
@@ -811,17 +817,20 @@
   }
   
   .age-buttons {
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   
   .age-btn {
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
   }
   
   .age-logo {
-    height: 32px;
+    height: 18px;
   }
   
   .legend {
@@ -853,6 +862,12 @@
     font-size: 10px;
     margin-right: 36px; /* Account for smaller 3D button on mobile */
   }
+  
+  .info-tooltip-content {
+    max-width: calc(100vw - 40px);
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -862,7 +877,7 @@
   }
   
   .side-panel {
-    top: calc(60vh + 8px);
+    top: calc(10vh + 8px);
     left: 8px;
     width: calc(100% - 16px);
   }
