@@ -51,12 +51,12 @@
 }
 
 /* Left-side control panel */
-.side-panel { position: absolute; top: calc(20vh + 22px); left: 22px; width: 414px; max-width: calc(100% - 44px); }
+.side-panel { position: absolute; top: calc(10vh + 22px); left: 22px; width: 414px; max-width: calc(100% - 44px); }
 
 /* Top-right age group panel */
 .age-card-top-right {
   position: absolute;
-  top: calc(20vh + 22px);
+  top: calc(10vh + 22px);
   right: 22px;
   width: 320px;
   max-width: calc(100% - 44px);
@@ -301,7 +301,7 @@
   position: absolute;
   right: 20px;
   bottom: 28px;
-  width: 420px;
+  width: 320px;
   max-width: calc(100% - 40px);
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
@@ -320,7 +320,7 @@
 }
 
 .legend-bar {
-  height: 18px;
+  height: 12px;
   border-radius: 999px;
   flex: 1;
 }
@@ -365,10 +365,12 @@
 .legend-labels {
   display: flex;
   justify-content: space-between;
-  font-weight: 800;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 14px;
   margin-top: 8px;
   margin-right: 44px; /* Account for 3D button width + gap */
+  letter-spacing: 0.2px;
+  color: #4a5568;
 }
 
 /* Age group card */
@@ -676,8 +678,13 @@
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
+  .map-container {
+    height: 60vh;
+    max-height: 60vh;
+  }
+  
   .side-panel {
-    top: calc(20vh + 12px);
+    top: calc(60vh + 12px);
     left: 12px;
     width: calc(100% - 24px);
     max-width: none;
@@ -732,7 +739,7 @@
   
   .legend {
     right: 12px;
-    bottom: 12px;
+    bottom: calc(40vh + 12px);
     width: calc(100% - 24px);
     max-width: none;
     padding: 16px;
@@ -842,8 +849,13 @@
 }
 
 @media (max-width: 480px) {
+  .map-container {
+    height: 60vh;
+    max-height: 60vh;
+  }
+  
   .side-panel {
-    top: calc(20vh + 8px);
+    top: calc(60vh + 8px);
     left: 8px;
     width: calc(100% - 16px);
   }
@@ -941,7 +953,7 @@
   }
   
   .legend {
-    bottom: 12px;
+    bottom: calc(40vh + 12px);
     right: 12px;
     padding: 6px 10px;
     font-size: 10px;
