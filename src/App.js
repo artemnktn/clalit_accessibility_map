@@ -8,7 +8,7 @@ function App() {
   const mapRef = useRef(null);
   const [poiVisible, setPoiVisible] = useState(true);
   const [mode, setMode] = useState('walk');
-  const [rangeMin, setRangeMin] = useState(10);
+  const [rangeMin, setRangeMin] = useState(15);
   const [mapLoaded, setMapLoaded] = useState(false);
   // Use the exact layer id from your style (lowercase)
   const poiLayerId = 'clalit-poi-200-1898zd';
@@ -69,6 +69,9 @@ function App() {
       maxZoom: 15,
     });
 
+    // Hide map initially to prevent flash of old heatmap
+    mapInstance.getContainer().style.visibility = 'hidden';
+
     mapRef.current = mapInstance;
 
     mapInstance.on('load', () => {
@@ -85,6 +88,19 @@ function App() {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn('Error checking POI layer:', e);
+      }
+
+      // Immediately remove old heatmap layer completely to prevent flash of wrong colors
+      try {
+        if (mapInstance.getLayer(heatmapLayerId)) {
+          // Remove the layer completely instead of just hiding it
+          mapInstance.removeLayer(heatmapLayerId);
+          // eslint-disable-next-line no-console
+          console.log('Removed old heatmap layer completely on load');
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('Error removing old heatmap layer:', e);
       }
 
       // Load custom icon for POI layer
@@ -128,13 +144,13 @@ function App() {
                   let animationId = null;
                   
                   const animateIcons = () => {
-                    pulseValue = (pulseValue + 0.03) % (Math.PI * 2);
+                    pulseValue = (pulseValue + 0.05) % (Math.PI * 2);
                     const pulse = (Math.sin(pulseValue) + 1) / 2; // Convert to 0-1 range
                     
                     try {
-                      // Subtle animation - very small changes
-                      const size = 0.8 + (pulse * 0.1); // 0.8 to 0.9 (very subtle)
-                      const opacity = 0.85 + (pulse * 0.1); // 0.85 to 0.95 (very subtle)
+                      // More active animation - increased changes
+                      const size = 0.75 + (pulse * 0.2); // 0.75 to 0.95 (more noticeable)
+                      const opacity = 0.8 + (pulse * 0.15); // 0.8 to 0.95 (more noticeable)
                       
                       mapInstance.setLayoutProperty(symbolLayerId, 'icon-size', size);
                       mapInstance.setPaintProperty(symbolLayerId, 'icon-opacity', opacity);
@@ -231,9 +247,11 @@ function App() {
       // Load new heatmap data source
       const loadNewHeatmapData = () => {
         try {
-          // Hide the old layer immediately to prevent showing wrong data
+          // Remove the old layer completely to prevent showing wrong data
           if (mapInstance.getLayer(heatmapLayerId)) {
-            mapInstance.setLayoutProperty(heatmapLayerId, 'visibility', 'none');
+            mapInstance.removeLayer(heatmapLayerId);
+            // eslint-disable-next-line no-console
+            console.log('Removed old heatmap layer in loadNewHeatmapData');
           }
           
           // Remove old source if it exists
@@ -268,9 +286,11 @@ function App() {
                   'interpolate',
                   ['linear'],
                   ['coalesce', ['to-number', ['get', colorColumn]], 0],
-                  0, '#0C7A2A',
-                  rangeMin / 2, '#7EEA45',
-                  rangeMin, '#FFD400'
+                  0, '#3C64B4',      // Blue (best accessibility)
+                  7.5, '#64C896',    // Light green/teal
+                  15, '#FFFFC8',     // Light yellow (neutral)
+                  22.5, '#FF6432',   // Orange
+                  30, '#8C1446'      // Dark red/purple (worst accessibility)
                 ],
                 'fill-opacity': 0.9,
                 'fill-outline-color': 'rgba(0,0,0,0)'
@@ -289,9 +309,12 @@ function App() {
       loadNewHeatmapData();
       setMapLoaded(true);
       
+      // Don't show map yet - wait for heatmap to be ready
+      // Map will be shown when heatmapReady becomes true
+      
       // Add heatmap click handlers
       const addHeatmapClickHandlers = () => {
-        const currentHeatmapLayerId = mapInstance.getLayer('clalit-accessibility-heatmap-new') ? 'clalit-accessibility-heatmap-new' : heatmapLayerId;
+        const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
         
         // Remove any existing popups first
         const existingPopups = document.querySelectorAll('.mapboxgl-popup');
@@ -380,8 +403,8 @@ function App() {
       // Force initial heatmap update after a short delay to ensure style is fully loaded
       setTimeout(() => {
         try {
-          // Use the new heatmap layer if available, otherwise fall back to old one
-          const currentHeatmapLayerId = mapInstance.getLayer('clalit-accessibility-heatmap-new') ? 'clalit-accessibility-heatmap-new' : heatmapLayerId;
+          // Use the new heatmap layer only
+          const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
           const heatLayer = mapInstance.getLayer(currentHeatmapLayerId);
         if (heatLayer) {
           const column = `${mode}_${rangeMin}min`;
@@ -469,7 +492,7 @@ function App() {
 
   const togglePoi = () => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map) return;
     const nextVisible = !poiVisible;
     
     // Toggle symbol layer if it exists, otherwise toggle original layer
@@ -488,6 +511,11 @@ function App() {
       if (map.getLayer(layerToToggle)) {
         map.setLayoutProperty(layerToToggle, 'visibility', nextVisible ? 'visible' : 'none');
         setPoiVisible(nextVisible);
+        // eslint-disable-next-line no-console
+        console.log('POI layer toggled:', layerToToggle, 'visible:', nextVisible);
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn('POI layer not found:', layerToToggle);
       }
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -584,9 +612,23 @@ function App() {
       return;
     }
     
-    // Use new heatmap layer if available, otherwise fall back to old one
+    // Don't hide heatmap while updating - keep it smooth
+    
+    // Aggressively remove old heatmap layer to prevent flash
+    try {
+      if (map.getLayer(heatmapLayerId)) {
+        map.removeLayer(heatmapLayerId);
+        // eslint-disable-next-line no-console
+        console.log('Removed old heatmap layer in useEffect');
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Error removing old heatmap layer in useEffect:', e);
+    }
+    
+    // Use new heatmap layer only (old layer should be removed)
     const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
-    const currentHeatmapLayerId = map.getLayer(newHeatmapLayerId) ? newHeatmapLayerId : heatmapLayerId;
+    const currentHeatmapLayerId = newHeatmapLayerId;
     
     // Check if layer exists before trying to access it
     if (!map.getLayer(currentHeatmapLayerId)) {
@@ -874,7 +916,7 @@ function App() {
     
     // Update click handlers when mode or range changes
     const updateClickHandlers = () => {
-      const currentHeatmapLayerId = map.getLayer('clalit-accessibility-heatmap-new') ? 'clalit-accessibility-heatmap-new' : heatmapLayerId;
+      const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
       
       // Remove existing handlers
       map.off('click', currentHeatmapLayerId);
@@ -968,6 +1010,16 @@ function App() {
     console.log('=== HEATMAP useEffect COMPLETED ===', { mode, rangeMin, is3DMode });
   }, [mode, rangeMin, mapLoaded, is3DMode]);
 
+  // Show map when loaded (only on first load)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && mapLoaded) {
+      map.getContainer().style.visibility = 'visible';
+      // eslint-disable-next-line no-console
+      console.log('Map made visible - loaded');
+    }
+  }, [mapLoaded]);
+
   // Auto-adjust range when mode changes
   useEffect(() => {
     const timeRanges = {
@@ -998,12 +1050,21 @@ function App() {
 
   return (
     <div className="App">
-      <div ref={mapContainerRef} className="map-container" />
+      <div 
+        ref={mapContainerRef} 
+        className="map-container" 
+        style={{ 
+          opacity: mapLoaded ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out'
+        }} 
+      />
       <div className="side-panel">
         <div className="control-card">
-        <h1 className="card-title">Clalit Clinic<br/>Accessibility Map</h1>
+        <h1 className="card-title">Closer to Care:</h1>
+        <div className="section-title" style={{ marginTop: 8, marginBottom: 32 }}>Mapping accessibility to Clalit's clinics</div>
+        <div className="divider" />
         <div className="row">
-          <div className="section-title">Where are Clinic located?</div>
+          <div className="section-title">Where are Clinics located?</div>
           <label className="switch" aria-label="Toggle clinic layer">
             <input type="checkbox" checked={poiVisible} onChange={togglePoi} />
             <span className="slider" />
@@ -1101,7 +1162,7 @@ function App() {
 
       {/* Coverage by Age group - Top Right */}
       <div className="age-card-top-right">
-        <div className="section-title">Coverage of City by the Age group</div>
+        <div className="section-title">Accessibility metrics by age groups</div>
         
         <div className="age-buttons">
           {['0-4', '5-18', '19-64', '65+'].map((g) => (
@@ -1125,12 +1186,12 @@ function App() {
             if (!data) return null;
             
             const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
-            const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
+            const modeLabel = mode === 'car' ? 'Drive' : mode === 'transit' ? 'get to a Clalit Clinic by Public Transport' : mode.charAt(0).toUpperCase() + mode.slice(1);
             
             return (
               <>
                 <p className="card-text" style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>
-                  {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeLabel} to a Clalit Clinic in {rangeMin}min.
+                  {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeLabel} in {rangeMin}min
                 </p>
                 <p className="card-text">
                   This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
@@ -1142,7 +1203,7 @@ function App() {
 
         <div className="divider" />
 
-        <div className="card-text" style={{ color: '#666', fontSize: 14, marginBottom: 12 }}>in collaboration with</div>
+        <div className="card-text" style={{ marginBottom: 12 }}>in collaboration with</div>
         <a 
           href="https://www.nurlab.org/" 
           target="_blank"
@@ -1192,10 +1253,7 @@ function App() {
           >
             <div className="popup-header">
               <div>
-                <h3>{popupData.properties.neighborhood || 'Clinic Information'}</h3>
-                {popupData.properties.name && (
-                  <p className="popup-subtitle">{popupData.properties.name}</p>
-                )}
+                <h3>{(popupData.properties.name || 'Clinic Information').replace(/_/g, ' ')}</h3>
               </div>
               <button className="popup-close" onClick={() => setPopupData(null)}>×</button>
             </div>
@@ -1273,13 +1331,20 @@ function App() {
                   {(() => {
                     const categories = ['community', 'education', 'food', 'healthcare', 'recreation', 'retail', 'services', 'transport'];
                     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+                    
+                    // Calculate total for percentage calculation
+                    const total = categories.reduce((sum, cat) => sum + (parseFloat(popupData.properties[cat]) || 0), 0);
+                    
                     return categories.map((cat, index) => {
                       const value = parseFloat(popupData.properties[cat]) || 0;
                       if (value === 0) return null;
+                      
+                      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                      
                       return (
                         <div key={cat} className="legend-item">
                           <div className="legend-color" style={{ backgroundColor: colors[index] }}></div>
-                          <span className="legend-label">{cat}</span>
+                          <span className="legend-label">{cat} ({percentage}%)</span>
                         </div>
                       );
                     });

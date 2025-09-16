@@ -1,5 +1,10 @@
 .App {
   text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .App-logo {
@@ -78,10 +83,21 @@
 }
 
 .card-title {
-  margin: 0 0 22px 0;
-  font-size: 29px;
+  margin: 0 0 8px 0;
+  font-size: 38px;
   line-height: 1.1;
   font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #1a1a1a;
+}
+
+.card-subtitle {
+  margin: 0 0 22px 0;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #4a5568;
+  letter-spacing: 0.2px;
 }
 
 .row {
@@ -92,16 +108,19 @@
 }
 
 .row-title {
-  font-size: 18px;
   font-size: 16px;
   font-weight: 700;
+  color: #2d3748;
+  letter-spacing: 0.1px;
 }
 
 .card-text {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.3;
-  color: #222;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #2d3748;
+  font-weight: 400;
+  letter-spacing: 0.1px;
 }
 
 .divider {
@@ -114,12 +133,17 @@
   font-size: 18px;
   font-weight: 800;
   margin: 0 0 20px 0;
+  color: #1a202c;
+  letter-spacing: -0.2px;
 }
 
 .section-text {
   margin: 0 0 14px 0;
-  font-size: 14px;
-  line-height: 1.3;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #4a5568;
+  font-weight: 400;
+  letter-spacing: 0.1px;
 }
 
 .icons-row {
@@ -149,11 +173,19 @@
   appearance: none;
   border: none;
   background: #e8e8e8;
-  color: #555;
-  font-weight: 700;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 14px;
   padding: 7px 13px;
   border-radius: 13px;
   cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
 }
 
 .mode-btn.active {
@@ -170,11 +202,19 @@
   appearance: none;
   border: none;
   background: #e8e8e8;
-  color: #555;
-  font-weight: 800;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 14px;
   padding: 8px 14px;
   border-radius: 14px;
   cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+}
+
+.range-btn:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
 }
 
 .range-btn.active {
@@ -242,8 +282,9 @@
 }
 
 .toggle-3d-text {
-  font-size: 14px;
-  letter-spacing: 0.5px;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  font-weight: 600;
 }
 
 /* Remove blue glow on focus/active */
@@ -325,7 +366,7 @@
   display: flex;
   justify-content: space-between;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 8px;
   margin-right: 44px; /* Account for 3D button width + gap */
 }
@@ -426,7 +467,7 @@
 .popup-subtitle {
   margin: 4px 0 0 0;
   color: #666;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
 }
 
@@ -512,10 +553,11 @@
 }
 
 .legend-label {
-  color: #333;
-  font-weight: 500;
+  color: #2d3748;
+  font-weight: 600;
   text-align: left;
-  font-size: 12px;
+  font-size: 16px;
+  letter-spacing: 0.1px;
 }
 
 .age-title { display: none; }
@@ -525,17 +567,32 @@
   appearance: none;
   border: none;
   background: #e8e8e8;
-  color: #555;
-  font-weight: 800;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 14px;
   padding: 8px 14px;
   border-radius: 14px;
   cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
 }
+.age-btn:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
+}
+
 .age-btn.active { background: #1ea7fd; color: #fff; }
 
 .age-body { margin: 12px 0 10px 0; }
 .age-divider { height: 2px; background: #eaeaea; margin: 16px 0; }
-.age-collab { font-size: 16px; color: #666; margin-bottom: 6px; }
+.age-collab { 
+  font-size: 16px; 
+  color: #4a5568; 
+  margin-bottom: 6px; 
+  font-weight: 400;
+  letter-spacing: 0.1px;
+  line-height: 1.4;
+}
 .age-logo { height: 40px; opacity: 0.8; }
 
 .nur-logo-link {
@@ -604,6 +661,19 @@
   transform: translateX(26px);
 }
 
+
+/* Touch-friendly styles for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .mode-btn, .range-btn, .age-btn, .toggle-3d-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .switch {
+    transform: scale(1.2);
+  }
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .side-panel {
@@ -614,12 +684,7 @@
   }
   
   .age-card-top-right {
-    top: 12px;
-    right: 12px;
-    width: calc(100% - 24px);
-    max-width: none;
-    padding: 16px 20px;
-    border-radius: 20px;
+    display: none;
   }
   
   .control-card {
@@ -629,8 +694,14 @@
   }
   
   .card-title {
-    font-size: 24px;
-    margin-bottom: 16px;
+    font-size: 28px;
+    margin-bottom: 12px;
+    line-height: 1.1;
+  }
+  
+  .card-subtitle {
+    font-size: 16px;
+    margin-bottom: 20px;
   }
   
   .section-title {
@@ -639,13 +710,15 @@
   }
   
   .card-text {
-    font-size: 13px;
+    font-size: 14px;
     margin-bottom: 12px;
+    line-height: 1.4;
   }
   
   .section-text {
-    font-size: 13px;
+    font-size: 14px;
     margin-bottom: 12px;
+    line-height: 1.4;
   }
   
   .divider {
@@ -655,6 +728,27 @@
   .icons-row {
     height: 32px;
     margin: 4px 0 8px 0;
+  }
+  
+  .legend {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100% - 24px);
+    max-width: none;
+    padding: 16px;
+  }
+  
+  .legend-label {
+    font-size: 14px;
+  }
+  
+  .toggle-3d-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .toggle-3d-text {
+    font-size: 14px;
   }
   
   .icon-img {
@@ -754,14 +848,21 @@
     width: calc(100% - 16px);
   }
   
+  
   .control-card {
     padding: 16px 20px;
     border-radius: 16px;
   }
   
   .card-title {
-    font-size: 20px;
-    margin-bottom: 12px;
+    font-size: 24px;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+  
+  .card-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
   }
   
   .section-title {
@@ -770,13 +871,15 @@
   }
   
   .card-text {
-    font-size: 12px;
+    font-size: 13px;
     margin-bottom: 10px;
+    line-height: 1.4;
   }
   
   .section-text {
-    font-size: 12px;
+    font-size: 13px;
     margin-bottom: 10px;
+    line-height: 1.4;
   }
   
   .icons-row {
@@ -794,9 +897,9 @@
   }
   
   .mode-btn {
-    padding: 5px 8px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
   }
   
   .ranges-row {
@@ -804,9 +907,9 @@
   }
   
   .range-btn {
-    padding: 5px 8px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
   }
   
   .age-card {
@@ -815,13 +918,22 @@
   }
   
   .age-buttons {
-    gap: 6px;
+    gap: 8px;
   }
   
   .age-btn {
-    padding: 5px 8px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  
+  .toggle-3d-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  
+  .toggle-3d-text {
+    font-size: 13px;
   }
   
   .age-logo {
