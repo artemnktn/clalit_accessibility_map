@@ -51,12 +51,12 @@
 }
 
 /* Left-side control panel */
-.side-panel { position: absolute; top: 22px; left: 22px; width: 414px; max-width: calc(100% - 44px); }
+.side-panel { position: absolute; top: calc(20vh + 22px); left: 22px; width: 414px; max-width: calc(100% - 44px); }
 
 /* Top-right age group panel */
 .age-card-top-right {
   position: absolute;
-  top: 22px;
+  top: calc(20vh + 22px);
   right: 22px;
   width: 320px;
   max-width: calc(100% - 44px);
@@ -677,7 +677,7 @@
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .side-panel {
-    top: 12px;
+    top: calc(20vh + 12px);
     left: 12px;
     width: calc(100% - 24px);
     max-width: none;
@@ -843,7 +843,7 @@
 
 @media (max-width: 480px) {
   .side-panel {
-    top: 8px;
+    top: calc(20vh + 8px);
     left: 8px;
     width: calc(100% - 16px);
   }
