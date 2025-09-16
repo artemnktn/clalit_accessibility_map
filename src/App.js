@@ -14,17 +14,18 @@ function App() {
   const poiLayerId = 'clalit-poi-200-1898zd';
   const heatmapLayerId = 'clalit-accessibility-heatmap-3v21at';
 
-  // Refs to align icons exactly above buttons without moving buttons
-  const iconsRowRef = useRef(null);
+  // Refs for buttons
   const walkBtnRef = useRef(null);
   const carBtnRef = useRef(null);
   const transitBtnRef = useRef(null);
-  const [iconLefts, setIconLefts] = useState({ walk: 0, car: 0, transit: 0 });
   const [ageGroup, setAgeGroup] = useState('5-18');
   const [coverageData, setCoverageData] = useState(null);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState('above');
   const [is3DMode, setIs3DMode] = useState(false);
+  const [hoveredInfo, setHoveredInfo] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [pulseValue, setPulseValue] = useState(0);
 
   // Load real data from JSON file
   useEffect(() => {
@@ -56,6 +57,28 @@ function App() {
         setCoverageData({});
       });
   }, []);
+
+  // Animation for clinic icons
+  useEffect(() => {
+    let animationId = null;
+    const animateIcons = () => {
+      setPulseValue(prev => {
+        const newValue = prev + 0.02;
+        return newValue > Math.PI * 2 ? 0 : newValue;
+      });
+      animationId = requestAnimationFrame(animateIcons);
+    };
+    
+    if (poiVisible) {
+      animateIcons();
+    }
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [poiVisible]);
 
   useEffect(() => {
     mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZW1ua3RuIiwiYSI6ImNtN2t0eGJnMzAzcTAybnJ6eGIyNGVwZjQifQ.m31J0mxEu4qvB66LxdGkPg';
@@ -139,34 +162,6 @@ function App() {
                   // Ensure POI is visible by default
                   setPoiVisible(true);
                   
-                  // Add pulsing animation to clinic icons
-                  let pulseValue = 0;
-                  let animationId = null;
-                  
-                  const animateIcons = () => {
-                    pulseValue = (pulseValue + 0.05) % (Math.PI * 2);
-                    const pulse = (Math.sin(pulseValue) + 1) / 2; // Convert to 0-1 range
-                    
-                    try {
-                      // More active animation - increased changes
-                      const size = 0.75 + (pulse * 0.2); // 0.75 to 0.95 (more noticeable)
-                      const opacity = 0.8 + (pulse * 0.15); // 0.8 to 0.95 (more noticeable)
-                      
-                      mapInstance.setLayoutProperty(symbolLayerId, 'icon-size', size);
-                      mapInstance.setPaintProperty(symbolLayerId, 'icon-opacity', opacity);
-                    } catch (e) {
-                      // Layer might not be ready yet
-                    }
-                    
-                    animationId = requestAnimationFrame(animateIcons);
-                  };
-                  
-                  // Start animation after a short delay
-                  setTimeout(() => {
-                    if (mapInstance.getLayer(symbolLayerId)) {
-                      animateIcons();
-                    }
-                  }, 1000);
                   
                   // Add click handler for popup
                   mapInstance.on('click', symbolLayerId, (e) => {
@@ -490,6 +485,22 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update icon animation
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    
+    const symbolLayerId = 'clalit-poi-icons';
+    if (map.getLayer(symbolLayerId)) {
+      const pulse = Math.sin(pulseValue);
+      const size = 0.8 + (pulse * 0.1);
+      const opacity = 0.85 + (pulse * 0.1);
+      
+      map.setPaintProperty(symbolLayerId, 'icon-opacity', opacity);
+      map.setLayoutProperty(symbolLayerId, 'icon-size', size);
+    }
+  }, [pulseValue]);
+
   const togglePoi = () => {
     const map = mapRef.current;
     if (!map) return;
@@ -521,6 +532,15 @@ function App() {
       // eslint-disable-next-line no-console
       console.warn('Error toggling POI layer:', e);
     }
+  };
+
+  const handleInfoHover = (content, event) => {
+    setHoveredInfo(content);
+    setModalPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const handleInfoLeave = () => {
+    setHoveredInfo(null);
   };
 
   const toggle3D = () => {
@@ -1036,17 +1056,6 @@ function App() {
     }
   }, [mode, rangeMin]);
 
-  // Position icons exactly above button centers without moving the buttons
-  useEffect(() => {
-    const row = iconsRowRef.current;
-    if (!row) return;
-    const rowRect = row.getBoundingClientRect();
-    const centerX = (el) => (el ? el.getBoundingClientRect().left + el.getBoundingClientRect().width / 2 : 0);
-    const walkX = centerX(walkBtnRef.current) - rowRect.left;
-    const carX = centerX(carBtnRef.current) - rowRect.left;
-    const transitX = centerX(transitBtnRef.current) - rowRect.left;
-    setIconLefts({ walk: walkX, car: carX, transit: transitX });
-  }, []);
 
   return (
     <div className="App">
@@ -1060,47 +1069,38 @@ function App() {
       />
       <div className="side-panel">
         <div className="control-card">
-        <h1 className="card-title">Closer to Care:</h1>
-        <div className="section-title" style={{ marginTop: 8, marginBottom: 32 }}>Mapping accessibility to Clalit's clinics</div>
+        <h1 className="card-title">Closer to Care</h1>
         <div className="divider" />
         <div className="row">
-          <div className="section-title">Where are Clinics located?</div>
+          <div className="section-title" style={{ textAlign: 'center', marginTop: '24px' }}>
+            Where are Clinics located?
+            <button 
+              className="info-btn"
+              onMouseEnter={(e) => handleInfoHover("Toggle clinic locations on the map to see which areas are served and which are underserved", e)}
+              onMouseLeave={handleInfoLeave}
+            >
+              ⓘ
+            </button>
+          </div>
           <label className="switch" aria-label="Toggle clinic layer">
             <input type="checkbox" checked={poiVisible} onChange={togglePoi} />
             <span className="slider" />
           </label>
         </div>
-        <p className="card-text">
-          Toggle clinic locations on the map to see which areas are served and which are underserved
-        </p>
 
         <div className="divider" />
 
-        <div className="section-title">Select Transport Modes</div>
-        <p className="section-text">
-          Compare how walking, driving, or public transit impacts travel reach across the city
-        </p>
-
-        <div className="icons-row" ref={iconsRowRef}>
-          <img
-            src={process.env.PUBLIC_URL + "/walk.png"}
-            alt="Walk"
-            className={`icon-img ${mode === 'walk' ? 'active' : ''}`}
-            style={{ left: iconLefts.walk }}
-          />
-          <img
-            src={process.env.PUBLIC_URL + "/car.png"}
-            alt="Car"
-            className={`icon-img ${mode === 'car' ? 'active' : ''}`}
-            style={{ left: iconLefts.car }}
-          />
-          <img
-            src={process.env.PUBLIC_URL + "/transit.png"}
-            alt="Transit"
-            className={`icon-img ${mode === 'transit' ? 'active' : ''}`}
-            style={{ left: iconLefts.transit }}
-          />
+        <div className="section-title">
+          Select Transport Modes
+          <button 
+            className="info-btn"
+            onMouseEnter={(e) => handleInfoHover("Compare how walking, driving, or public transit impacts travel reach across the city", e)}
+            onMouseLeave={handleInfoLeave}
+          >
+            ⓘ
+          </button>
         </div>
+
 
         <div className="modes-row">
           <button
@@ -1128,10 +1128,16 @@ function App() {
 
         <div className="divider" />
 
-        <div className="section-title">Select Accessibility Range</div>
-        <p className="section-text">
-          See how far people can reach in the available time ranges
-        </p>
+        <div className="section-title">
+          Select Accessibility Range
+          <button 
+            className="info-btn"
+            onMouseEnter={(e) => handleInfoHover("See how far people can reach in the available time ranges", e)}
+            onMouseLeave={handleInfoLeave}
+          >
+            ⓘ
+          </button>
+        </div>
 
         <div className="ranges-row">
           {(() => {
@@ -1160,8 +1166,8 @@ function App() {
 
       </div>
 
-      {/* Coverage by Age group - Top Right */}
-      <div className="age-card-top-right">
+      {/* Accessibility metrics by age groups - Below Closer to Care */}
+      <div className="age-card-below">
         <div className="section-title">Accessibility metrics by age groups</div>
         
         <div className="age-buttons">
@@ -1203,15 +1209,17 @@ function App() {
 
         <div className="divider" />
 
-        <div className="card-text" style={{ marginBottom: 12 }}>in collaboration with</div>
-        <a 
-          href="https://www.nurlab.org/" 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="nur-logo-link"
-        >
-          <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
-        </a>
+        <div className="card-text" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>in collaboration with</span>
+          <a 
+            href="https://www.nurlab.org/" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nur-logo-link"
+          >
+            <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
+          </a>
+        </div>
       </div>
 
       {/* Adaptive legend bottom-right with 3D toggle */}
@@ -1355,6 +1363,24 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Info Tooltip */}
+      <div 
+        className="info-tooltip"
+        style={{
+          left: modalPosition.x + 10,
+          top: modalPosition.y - 10,
+          opacity: hoveredInfo ? 1 : 0,
+          visibility: hoveredInfo ? 'visible' : 'hidden',
+          transition: 'opacity 0.15s ease-out, visibility 0.15s ease-out',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+        }}
+      >
+        <div className="info-tooltip-content">
+          <p>{hoveredInfo || ''}</p>
+        </div>
+      </div>
 
     </div>
   );
