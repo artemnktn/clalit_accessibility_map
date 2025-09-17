@@ -464,9 +464,11 @@ function App() {
         // Check if click was on a layer (clinic or heatmap) - if so, don't close popups
         const features = mapInstance.queryRenderedFeatures(e.point);
         const hasLayerFeatures = features.some(feature => 
-          feature.layer.id === 'clalit-poi-icons' || 
-          feature.layer.id === 'clalit-accessibility-heatmap-new' ||
-          feature.layer.id === 'clalit-accessibility-heatmap-3v21at'
+          feature.layer && (
+            feature.layer.id === 'clalit-poi-icons' || 
+            feature.layer.id === 'clalit-accessibility-heatmap-new' ||
+            feature.layer.id === 'clalit-accessibility-heatmap-3v21at'
+          )
         );
         
         // Only close popups if click was not on a layer
