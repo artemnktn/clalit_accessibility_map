@@ -368,8 +368,8 @@ function App() {
                 user-select: none;
               `;
               popupElement.innerHTML = `
-                <div>${Math.round(density)} people</div>
-                <div>${minutes} min to closest clinic</div>
+                <div style="font-size: 14px; margin-bottom: 4px;">${Math.round(density)} people</div>
+                <div style="font-size: 14px;">${minutes} min to closest clinic</div>
               `;
               
               // Add to map container
@@ -1005,7 +1005,7 @@ function App() {
               border-radius: 28px;
               box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
               padding: 24px 28px;
-              font-size: 18px;
+              font-size: 14px;
               font-weight: 700;
               color: #333;
               text-align: center;
@@ -1016,8 +1016,8 @@ function App() {
               user-select: none;
             `;
             popupElement.innerHTML = `
-              <div>${Math.round(density)} people</div>
-              <div>${minutes} min to closest clinic</div>
+              <div style="font-size: 14px; margin-bottom: 4px;">${Math.round(density)} people</div>
+              <div style="font-size: 14px;">${minutes} min to closest clinic</div>
             `;
             
             // Add to map container
