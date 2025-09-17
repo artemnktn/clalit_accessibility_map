@@ -257,7 +257,7 @@ function App() {
           // Add new GeoJSON source
           mapInstance.addSource('clalit-accessibility-heatmap-new', {
             type: 'geojson',
-            data: process.env.PUBLIC_URL + '/accessibility_heatmap_otp_FINAL.geojson'
+            data: process.env.PUBLIC_URL + '/accessibility_heatmap_otp (17 Sept).geojson'
           });
           
           // Create new heatmap layer using the new data source
@@ -331,6 +331,7 @@ function App() {
             
             if (value !== null && value !== undefined) {
               const minutes = Math.round(value);
+              const density = properties.density || 0;
               
               // Remove any existing custom popup
               const existingPopup = document.querySelector('.custom-heatmap-popup');
@@ -366,7 +367,10 @@ function App() {
                 pointer-events: none;
                 user-select: none;
               `;
-              popupElement.textContent = `${minutes} minutes to nearest clinic`;
+              popupElement.innerHTML = `
+                <div>${Math.round(density)} people</div>
+                <div>${minutes} min to closest clinic</div>
+              `;
               
               // Add to map container
               const mapContainer = mapInstance.getContainer();
@@ -707,6 +711,10 @@ function App() {
     // Gradient color ramp driven by selected column value - fixed scale 0-30 min (inverted coolwarm with green)
     const rawValue = ['coalesce', ['to-number', ['get', column]], 0];
     const maxRange = 30; // Fixed maximum range for all modes
+    
+    // For 3D mode, use density data instead of time data
+    const densityValue = ['coalesce', ['to-number', ['get', 'density']], 0];
+    const densityMaxRange = 1000; // Maximum density range for 3D extrusion
     const colorRamp = [
       'interpolate', ['linear'], rawValue,
       0, '#3C64B4',      // Blue (best accessibility)
@@ -753,17 +761,24 @@ function App() {
           // eslint-disable-next-line no-console
           console.log('HeatLayer type:', heatLayer?.type);
           
-          // Create 3D extrusion based on data values - INVERTED: high values = low extrusion
+          // Create 3D extrusion based on density data - high density = high extrusion
           const extrusionHeight = [
             'interpolate',
             ['linear'],
-            rawValue,
-            0, 500,           // Low values = high extrusion (inverted)
-            maxRange, 0       // High values = low extrusion (inverted)
+            densityValue,
+            0, 0,                    // No people = no extrusion
+            densityMaxRange, 500     // High density = high extrusion
           ];
           
-          // Use same color ramp as 2D mode for consistency
-          const heightColorRamp = colorRamp;
+          // Use density-based color ramp for 3D mode
+          const heightColorRamp = [
+            'interpolate', ['linear'], densityValue,
+            0, '#3C64B4',           // Blue (low density)
+            densityMaxRange * 0.25, '#64C896',    // Light green (medium-low density)
+            densityMaxRange * 0.5, '#FFFFC8',     // Light yellow (medium density)
+            densityMaxRange * 0.75, '#FF6432',    // Orange (high density)
+            densityMaxRange, '#8C1446'            // Red (very high density)
+          ];
           
           // Try to create a new fill-extrusion layer if it doesn't exist
           const extrusionLayerId = currentHeatmapLayerId + '-3d';
@@ -962,6 +977,7 @@ function App() {
           
           if (value !== null && value !== undefined) {
             const minutes = Math.round(value);
+            const density = properties.density || 0;
             
             // Remove any existing custom popup
             const existingPopup = document.querySelector('.custom-heatmap-popup');
@@ -997,7 +1013,10 @@ function App() {
               pointer-events: none;
               user-select: none;
             `;
-            popupElement.textContent = `${minutes} minutes to nearest clinic`;
+            popupElement.innerHTML = `
+              <div>${Math.round(density)} people</div>
+              <div>${minutes} min to closest clinic</div>
+            `;
             
             // Add to map container
             const mapContainer = map.getContainer();
@@ -1213,8 +1232,8 @@ function App() {
           <span>in collaboration with</span>
           <a 
             href="https://www.nurlab.org/" 
-            target="_blank"
-            rel="noopener noreferrer"
+          target="_blank"
+          rel="noopener noreferrer"
             className="nur-logo-link"
           >
             <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
@@ -1227,7 +1246,11 @@ function App() {
         <div className="legend-header">
           <div
             className="legend-bar"
-            style={{ background: 'linear-gradient(90deg, #3C64B4 0%, #64C896 25%, #FFFFC8 50%, #FF6432 75%, #8C1446 100%)' }}
+            style={{ 
+              background: is3DMode 
+                ? 'linear-gradient(90deg, #3C64B4 0%, #64C896 25%, #FFFFC8 50%, #FF6432 75%, #8C1446 100%)'
+                : 'linear-gradient(90deg, #3C64B4 0%, #64C896 25%, #FFFFC8 50%, #FF6432 75%, #8C1446 100%)'
+            }}
           />
           <button
             className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
@@ -1243,9 +1266,19 @@ function App() {
           </button>
         </div>
         <div className="legend-labels">
-          <span>0 min</span>
-          <span>15 min</span>
-          <span>30 min</span>
+          {is3DMode ? (
+            <>
+              <span>0 people</span>
+              <span>500 people</span>
+              <span>1000 people</span>
+            </>
+          ) : (
+            <>
+              <span>0 min</span>
+              <span>15 min</span>
+              <span>30 min</span>
+            </>
+          )}
         </div>
       </div>
 

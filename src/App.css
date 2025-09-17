@@ -56,7 +56,7 @@
 /* Age group panel below Closer to Care */
 .age-card-below {
   position: absolute;
-  bottom: 80px;
+  top: calc(10vh + 40px + 400px);
   left: 22px;
   width: 414px;
   box-sizing: border-box;
@@ -306,7 +306,7 @@
 .legend {
   position: absolute;
   right: 20px;
-  bottom: 80px;
+  bottom: 20px;
   width: 320px;
   max-width: calc(100% - 40px);
   background: rgba(255, 255, 255, 0.25);
