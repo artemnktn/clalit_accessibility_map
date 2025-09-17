@@ -699,20 +699,23 @@
     max-width: none;
     z-index: 2000;
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.85) 0%, 
-      rgba(255, 255, 255, 0.75) 50%, 
-      rgba(255, 255, 255, 0.7) 100%);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border-top: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 24px 24px 0 0;
+      rgba(255, 255, 255, 0.25) 0%, 
+      rgba(255, 255, 255, 0.15) 50%, 
+      rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 28px 28px 0 0;
     box-shadow: 
-      0 -20px 40px rgba(0,0,0,0.15), 
-      0 -8px 24px rgba(0,0,0,0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      0 -25px 50px rgba(0,0,0,0.2), 
+      0 -12px 30px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
     max-height: 45vh;
     overflow-y: auto;
-    padding: 8px 0 0 0;
+    padding: 12px 0 0 0;
   }
   
   .age-card-below {
@@ -721,20 +724,21 @@
   
   
   .control-card {
-    padding: 12px 16px;
-    border-radius: 20px;
-    margin: 8px 12px 8px 12px;
+    padding: 16px 20px;
+    border-radius: 24px;
+    margin: 12px 16px 12px 16px;
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.3) 0%, 
-      rgba(255, 255, 255, 0.2) 50%, 
-      rgba(255, 255, 255, 0.15) 100%);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+      rgba(255, 255, 255, 0.2) 0%, 
+      rgba(255, 255, 255, 0.1) 50%, 
+      rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 
-      0 8px 24px rgba(0,0,0,0.1), 
-      0 4px 12px rgba(0,0,0,0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      0 12px 32px rgba(0,0,0,0.15), 
+      0 6px 16px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
   }
   
   .card-title {
@@ -780,20 +784,21 @@
     bottom: calc(45vh + 8px);
     width: calc(100% - 24px);
     max-width: 280px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     z-index: 1500;
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.8) 0%, 
-      rgba(255, 255, 255, 0.7) 50%, 
-      rgba(255, 255, 255, 0.6) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 16px;
+      rgba(255, 255, 255, 0.2) 0%, 
+      rgba(255, 255, 255, 0.1) 50%, 
+      rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(35px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
     box-shadow: 
-      0 8px 24px rgba(0,0,0,0.15), 
-      0 4px 12px rgba(0,0,0,0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      0 12px 32px rgba(0,0,0,0.2), 
+      0 6px 16px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
   }
   
   .legend-label {
@@ -820,23 +825,32 @@
   }
   
   .mode-btn {
-    padding: 8px 10px;
-    border-radius: 12px;
+    padding: 10px 12px;
+    border-radius: 16px;
     font-size: 13px;
     flex: 1;
     min-width: 0;
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.4) 0%, 
-      rgba(255, 255, 255, 0.3) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      rgba(255, 255, 255, 0.3) 0%, 
+      rgba(255, 255, 255, 0.2) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 4px 12px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   
   .mode-btn.active {
-    background: linear-gradient(135deg, #1ea7fd 0%, #0d8ce8 100%);
-    box-shadow: 0 4px 12px rgba(30, 167, 253, 0.3);
+    background: linear-gradient(135deg, 
+      rgba(30, 167, 253, 0.8) 0%, 
+      rgba(13, 140, 232, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 6px 16px rgba(30, 167, 253, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
   
   .ranges-row {
@@ -845,36 +859,47 @@
   }
   
   .range-btn {
-    padding: 8px 10px;
-    border-radius: 12px;
+    padding: 10px 12px;
+    border-radius: 16px;
     font-size: 13px;
     flex: 1;
     min-width: 0;
     background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.4) 0%, 
-      rgba(255, 255, 255, 0.3) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      rgba(255, 255, 255, 0.3) 0%, 
+      rgba(255, 255, 255, 0.2) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 4px 12px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   
   .range-btn.active {
-    background: linear-gradient(135deg, #1ea7fd 0%, #0d8ce8 100%);
-    box-shadow: 0 4px 12px rgba(30, 167, 253, 0.3);
+    background: linear-gradient(135deg, 
+      rgba(30, 167, 253, 0.8) 0%, 
+      rgba(13, 140, 232, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 6px 16px rgba(30, 167, 253, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
   
   .toggle-3d-btn {
-    padding: 8px 12px;
-    border-radius: 14px;
+    padding: 10px 14px;
+    border-radius: 18px;
     font-size: 12px;
     background: linear-gradient(135deg, 
-      rgba(102, 126, 234, 0.8) 0%, 
-      rgba(118, 75, 162, 0.8) 100%);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+      rgba(102, 126, 234, 0.6) 0%, 
+      rgba(118, 75, 162, 0.6) 100%);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 
+      0 6px 16px rgba(102, 126, 234, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   
   .toggle-3d-icon {
