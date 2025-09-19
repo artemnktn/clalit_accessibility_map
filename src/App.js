@@ -27,6 +27,7 @@ function App() {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [pulseValue, setPulseValue] = useState(0);
 
+
   // Load real data from JSON file
   useEffect(() => {
     fetch(process.env.PUBLIC_URL + '/demographics_accessibility_otp_FINAL.json')
@@ -80,16 +81,28 @@ function App() {
     };
   }, [poiVisible]);
 
+
   useEffect(() => {
     mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZW1ua3RuIiwiYSI6ImNtN2t0eGJnMzAzcTAybnJ6eGIyNGVwZjQifQ.m31J0mxEu4qvB66LxdGkPg';
 
     const mapInstance = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/artemnktn/cmfaql8ym003q01sdadp15oqe',
-      center: [34.791462, 31.252973],
+      center: [34.782, 31.258], // Сдвинуто еще левее для оптимального обзора хитмапа
       zoom: 13,
       minZoom: 11,
       maxZoom: 15,
+      // Enable 3D rotation controls
+      dragRotate: true,
+      dragPan: true,
+      scrollZoom: true,
+      boxZoom: true,
+      doubleClickZoom: true,
+      keyboard: true,
+      touchZoomRotate: true,
+      // Enable pitch and bearing controls
+      pitch: 0,
+      bearing: 0,
     });
 
     // Hide map initially to prevent flash of old heatmap
@@ -258,7 +271,7 @@ function App() {
           // Add new GeoJSON source for updated clinic data
           mapInstance.addSource('clalit-poi-updated', {
             type: 'geojson',
-            data: process.env.PUBLIC_URL + '/clalit_poi_eng_1809.json'
+            data: process.env.PUBLIC_URL + '/clalit_poi_eng_1809.geojson'
           });
           
           // Create new heatmap layer using the new data source
@@ -318,6 +331,16 @@ function App() {
         
         // Add click handler for heatmap
         mapInstance.on('click', currentHeatmapLayerId, (e) => {
+          // Check if click was on a clinic icon - if so, don't show heatmap popup
+          const allFeatures = mapInstance.queryRenderedFeatures(e.point);
+          const hasClinicFeature = allFeatures.some(feature => 
+            feature.layer && feature.layer.id === 'clalit-poi-icons'
+          );
+          
+          if (hasClinicFeature) {
+            return; // Don't show heatmap popup if clicked on clinic
+          }
+          
           // Stop event propagation to prevent map click handler from firing
           e.originalEvent.stopPropagation();
           
@@ -355,22 +378,22 @@ function App() {
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 28px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
-                padding: 24px 28px;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+                padding: 12px 16px;
                 font-size: 14px;
-                font-weight: 700;
+                font-weight: 600;
                 color: #333;
-                text-align: center;
-                min-width: 200px;
-                max-width: 300px;
+                text-align: left;
+                min-width: 140px;
+                max-width: 200px;
                 z-index: 1000;
                 pointer-events: none;
                 user-select: none;
               `;
               popupElement.innerHTML = `
-                <div style="font-size: 14px; margin-bottom: 4px;">${Math.round(density)} people</div>
-                <div style="font-size: 14px;">${minutes} min to closest clinic</div>
+                <div style="font-size: 14px; margin-bottom: 4px; text-align: left;">${Math.round(density)} people</div>
+                <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic</div>
               `;
               
               // Add to map container
@@ -387,14 +410,6 @@ function App() {
           }
         });
         
-        // Add cursor pointer on hover
-        mapInstance.on('mouseenter', currentHeatmapLayerId, () => {
-          mapInstance.getCanvas().style.cursor = 'pointer';
-        });
-        
-        mapInstance.on('mouseleave', currentHeatmapLayerId, () => {
-          mapInstance.getCanvas().style.cursor = '';
-        });
       };
       
       // Add click handlers after a short delay to ensure layer is ready
@@ -425,9 +440,11 @@ function App() {
           const colorColumn = column;
           const colorRamp = [
             'interpolate', ['linear'], ['coalesce', ['to-number', ['get', colorColumn]], 0],
-            0, '#0C7A2A',
-            midRange, '#7EEA45',
-            maxRange, '#FFD400'
+            0, '#3C64B4',      // Blue (best accessibility)
+            7.5, '#64C896',    // Light green/teal
+            15, '#FFFFC8',     // Light yellow (neutral)
+            22.5, '#FF6432',   // Orange
+            30, '#8C1446'      // Dark red/purple (worst accessibility)
           ];
           
           try {
@@ -438,14 +455,16 @@ function App() {
               mapInstance.setPaintProperty(currentHeatmapLayerId, 'heatmap-opacity', 0.9);
             } else if (heatLayer.type === 'fill') {
               try { mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-pattern', null); } catch (_) {}
-              mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-color', colorRamp);
-              mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-opacity', 0.9);
-              mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+            mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-color', colorRamp);
+            mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-opacity', 0.9);
+            mapInstance.setPaintProperty(currentHeatmapLayerId, 'fill-outline-color', 'rgba(0,0,0,0)');
+            
             } else if (heatLayer.type === 'circle') {
               mapInstance.setPaintProperty(currentHeatmapLayerId, 'circle-color', colorRamp);
               mapInstance.setPaintProperty(currentHeatmapLayerId, 'circle-opacity', 0.9);
               mapInstance.setPaintProperty(currentHeatmapLayerId, 'circle-radius', 6);
             }
+            
           } catch (e) {
             // eslint-disable-next-line no-console
             console.warn('Failed to set heatmap properties:', e);
@@ -581,6 +600,10 @@ function App() {
           duration: 2000
         });
         
+        // Enable enhanced 3D controls
+        map.dragRotate.enable();
+        map.touchZoomRotate.enable();
+        
         // eslint-disable-next-line no-console
         console.log('3D mode enabled - heatmap extrusion only');
         
@@ -607,6 +630,10 @@ function App() {
           bearing: 0,
           duration: 1000
         });
+        
+        // Disable enhanced 3D controls when returning to 2D
+        map.dragRotate.disable();
+        map.touchZoomRotate.disable();
         
         // eslint-disable-next-line no-console
         console.log('3D mode disabled - camera reset to flat view');
@@ -727,6 +754,7 @@ function App() {
       maxRange, '#8C1446' // Dark red/purple (worst accessibility)
     ];
 
+
     // Apply paint properties based on layer type - always update colors
     try {
       if (heatLayer.type === 'heatmap') {
@@ -773,14 +801,16 @@ function App() {
             densityMaxRange, 500     // High density = high extrusion
           ];
           
-          // Use density-based color ramp for 3D mode
+          // Use accessibility-based color ramp for 3D mode (height still based on density)
+          const accessibilityValue = ['coalesce', ['to-number', ['get', column]], 0];
+          const accessibilityMaxRange = 30; // Maximum accessibility range (30 minutes)
           const heightColorRamp = [
-            'interpolate', ['linear'], densityValue,
-            0, '#3C64B4',           // Blue (low density)
-            densityMaxRange * 0.25, '#64C896',    // Light green (medium-low density)
-            densityMaxRange * 0.5, '#FFFFC8',     // Light yellow (medium density)
-            densityMaxRange * 0.75, '#FF6432',    // Orange (high density)
-            densityMaxRange, '#8C1446'            // Red (very high density)
+            'interpolate', ['linear'], accessibilityValue,
+            0, '#3C64B4',           // Blue (best accessibility - 0 min)
+            accessibilityMaxRange * 0.25, '#64C896',    // Light green (good accessibility - 7.5 min)
+            accessibilityMaxRange * 0.5, '#FFFFC8',     // Light yellow (medium accessibility - 15 min)
+            accessibilityMaxRange * 0.75, '#FF6432',    // Orange (poor accessibility - 22.5 min)
+            accessibilityMaxRange, '#8C1446'            // Red (worst accessibility - 30 min)
           ];
           
           // Try to create a new fill-extrusion layer if it doesn't exist
@@ -969,6 +999,16 @@ function App() {
       
       // Add click handler for heatmap
       map.on('click', currentHeatmapLayerId, (e) => {
+        // Check if click was on a clinic icon - if so, don't show heatmap popup
+        const allFeatures = map.queryRenderedFeatures(e.point);
+        const hasClinicFeature = allFeatures.some(feature => 
+          feature.layer && feature.layer.id === 'clalit-poi-icons'
+        );
+        
+        if (hasClinicFeature) {
+          return; // Don't show heatmap popup if clicked on clinic
+        }
+        
         const features = e.features;
         if (features && features.length > 0) {
           const feature = features[0];
@@ -1003,22 +1043,22 @@ function App() {
               backdrop-filter: blur(20px);
               -webkit-backdrop-filter: blur(20px);
               border: 1px solid rgba(255, 255, 255, 0.3);
-              border-radius: 28px;
-              box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
-              padding: 24px 28px;
+              border-radius: 12px;
+              box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+              padding: 12px 16px;
               font-size: 14px;
-              font-weight: 700;
+              font-weight: 600;
               color: #333;
-              text-align: center;
-              min-width: 200px;
-              max-width: 300px;
+              text-align: left;
+              min-width: 140px;
+              max-width: 200px;
               z-index: 1000;
               pointer-events: none;
               user-select: none;
             `;
             popupElement.innerHTML = `
-              <div style="font-size: 14px; margin-bottom: 4px;">${Math.round(density)} people</div>
-              <div style="font-size: 14px;">${minutes} min to closest clinic</div>
+              <div style="font-size: 14px; margin-bottom: 4px; text-align: left;">${Math.round(density)} people</div>
+              <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic</div>
             `;
             
             // Add to map container
@@ -1035,14 +1075,6 @@ function App() {
         }
       });
       
-      // Add cursor pointer on hover
-      map.on('mouseenter', currentHeatmapLayerId, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      
-      map.on('mouseleave', currentHeatmapLayerId, () => {
-        map.getCanvas().style.cursor = '';
-      });
     };
     
     // Update click handlers
@@ -1092,9 +1124,10 @@ function App() {
       <div className="side-panel">
         <div className="control-card">
         <h1 className="card-title">Closer to Care</h1>
+        <p className="card-subtitle">Mapping accessibility to Clalit's clinics</p>
         <div className="divider" />
         <div className="row">
-          <div className="section-title" style={{ textAlign: 'center', marginTop: '24px' }}>
+          <div className="section-title" style={{ textAlign: 'center', marginTop: '8px' }}>
             Where are Clinics located?
             <button 
               className="info-btn"
@@ -1162,26 +1195,42 @@ function App() {
         </div>
 
         <div className="ranges-row">
-          {(() => {
-            // Define available time ranges for each transport mode
-            const timeRanges = {
-              walk: [10, 15],      // Only 10 and 15 min for walking
-              car: [10, 15, 20, 30],   // All ranges for car
-              transit: [10, 15, 20, 30] // All ranges for transit
-            };
-            
-            const availableRanges = timeRanges[mode] || [10, 15, 20, 30];
-            
-            return availableRanges.map((m) => (
-              <button
-                key={m}
-                className={`range-btn ${rangeMin === m ? 'active' : ''}`}
-                onClick={() => setRangeMin(m)}
-              >
-                {m} min
-              </button>
-            ));
-          })()}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {(() => {
+              // Define available time ranges for each transport mode
+              const timeRanges = {
+                walk: [10, 15],      // Only 10 and 15 min for walking
+                car: [10, 15, 20, 30],   // All ranges for car
+                transit: [10, 15, 20, 30] // All ranges for transit
+              };
+              
+              const availableRanges = timeRanges[mode] || [10, 15, 20, 30];
+              
+              return availableRanges.map((m) => (
+                <button
+                  key={m}
+                  className={`range-btn ${rangeMin === m ? 'active' : ''}`}
+                  onClick={() => setRangeMin(m)}
+                >
+                  {m} min
+                </button>
+              ));
+            })()}
+          </div>
+          
+          {/* 3D Toggle Button - centered on the right */}
+          <button
+            className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
+            onClick={toggle3D}
+            title="Toggle 3D extrusion"
+            style={{ 
+              zIndex: 1000,
+              position: 'relative',
+              pointerEvents: 'auto'
+            }}
+          >
+            <span className="legend-3d-text">3D</span>
+          </button>
         </div>
 
         </div>
@@ -1214,12 +1263,21 @@ function App() {
             if (!data) return null;
             
             const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
-            const modeLabel = mode === 'car' ? 'Drive' : mode === 'transit' ? 'get to a Clalit Clinic by Public Transport' : mode.charAt(0).toUpperCase() + mode.slice(1);
+            
+            // Определяем текст для каждого режима
+            let modeText;
+            if (mode === 'walk') {
+              modeText = `walk to a Clalit Clinic in ${rangeMin}min`;
+            } else if (mode === 'car') {
+              modeText = `Drive to a Clalit Clinic in ${rangeMin}min`;
+            } else if (mode === 'transit') {
+              modeText = 'get to a Clalit Clinic by Public Transport in 15min';
+            }
             
             return (
               <>
                 <p className="card-text" style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>
-                  {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeLabel} in {rangeMin}min
+                  {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeText}.
                 </p>
                 <p className="card-text">
                   This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
@@ -1244,7 +1302,7 @@ function App() {
         </div>
       </div>
 
-      {/* Adaptive legend bottom-right with 3D toggle */}
+      {/* Stretched legend without 3D button */}
       <div className="legend">
         <div className="legend-header">
           <div
@@ -1255,25 +1313,13 @@ function App() {
                 : 'linear-gradient(90deg, #3C64B4 0%, #64C896 25%, #FFFFC8 50%, #FF6432 75%, #8C1446 100%)'
             }}
           />
-          <button
-            className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
-            onClick={toggle3D}
-            title="Toggle 3D extrusion"
-            style={{ 
-              zIndex: 1000,
-              position: 'relative',
-              pointerEvents: 'auto'
-            }}
-          >
-            <span className="legend-3d-text">3D</span>
-          </button>
         </div>
         <div className="legend-labels">
           {is3DMode ? (
             <>
-              <span>0 people</span>
-              <span>500 people</span>
-              <span>1000 people</span>
+              <span>0 min</span>
+              <span>15 min</span>
+              <span>30 min</span>
             </>
           ) : (
             <>
@@ -1298,6 +1344,9 @@ function App() {
             <div className="popup-header">
               <div>
                 <h3>{(popupData.properties.name || 'Clinic Information').replace(/_/g, ' ')}</h3>
+                {popupData.properties.neighborhood && (
+                  <p className="popup-neighborhood">{popupData.properties.neighborhood}</p>
+                )}
               </div>
               <button className="popup-close" onClick={() => setPopupData(null)}>×</button>
             </div>
@@ -1306,8 +1355,8 @@ function App() {
               <div className="pie-chart-container">
                 <svg width="120" height="120" className="pie-chart">
                   {(() => {
-                    const categories = ['community', 'education', 'food', 'healthcare', 'recreation', 'retail', 'services', 'transport'];
-                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+                    const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
+                    const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
                     const data = categories.map(cat => ({
                       name: cat,
                       value: parseFloat(popupData.properties[cat]) || 0,
@@ -1363,7 +1412,7 @@ function App() {
                           d={pathData}
                           fill={item.color}
                           stroke="white"
-                          strokeWidth="2"
+                          strokeWidth="1"
                         />
                       );
                     });
@@ -1373,8 +1422,8 @@ function App() {
                 {/* Legend */}
                 <div className="pie-legend">
                   {(() => {
-                    const categories = ['community', 'education', 'food', 'healthcare', 'recreation', 'retail', 'services', 'transport'];
-                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+                    const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
+                    const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
                     
                     // Calculate total for percentage calculation
                     const total = categories.reduce((sum, cat) => sum + (parseFloat(popupData.properties[cat]) || 0), 0);
