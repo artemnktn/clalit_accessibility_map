@@ -22,7 +22,7 @@ function App() {
   const [coverageData, setCoverageData] = useState(null);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState('above');
-  const [is3DMode, setIs3DMode] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(window.innerWidth <= 768);
   const [hoveredInfo, setHoveredInfo] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [pulseValue, setPulseValue] = useState(0);
@@ -1093,6 +1093,17 @@ function App() {
       console.log('Map made visible - loaded');
     }
   }, [mapLoaded]);
+
+  // Handle window resize for 3D mode
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setIs3DMode(isMobile);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Auto-adjust range when mode changes
   useEffect(() => {
