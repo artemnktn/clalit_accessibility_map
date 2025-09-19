@@ -134,17 +134,14 @@ function App() {
           img.onload = () => {
             try { 
               mapInstance.addImage('clalit-icon', img, { pixelRatio: 2 }); 
-              // Create symbol layer for POI points
-              const layerDef = mapInstance.getStyle().layers.find((l) => l.id === poiLayerId);
-              if (layerDef && layerDef.source && layerDef['source-layer']) {
-                const symbolLayerId = 'clalit-poi-icons';
-                try {
-                  if (!mapInstance.getLayer(symbolLayerId)) {
+              // Create symbol layer for updated POI points
+              const symbolLayerId = 'clalit-poi-icons';
+              try {
+                if (!mapInstance.getLayer(symbolLayerId)) {
                   mapInstance.addLayer({
                     id: symbolLayerId,
                     type: 'symbol',
-                    source: layerDef.source,
-                    'source-layer': layerDef['source-layer'],
+                    source: 'clalit-poi-updated',
                     filter: ['==', ['geometry-type'], 'Point'],
                     layout: {
                       'icon-image': 'clalit-icon',
@@ -161,7 +158,6 @@ function App() {
                   try { mapInstance.setLayoutProperty(symbolLayerId, 'visibility', 'visible'); } catch (_) {}
                   // Ensure POI is visible by default
                   setPoiVisible(true);
-                  
                   
                   // Add click handler for popup
                   mapInstance.on('click', symbolLayerId, (e) => {
@@ -219,10 +215,9 @@ function App() {
                     mapInstance.getCanvas().style.cursor = '';
                   });
                 }
-                } catch (e) {
-                  // eslint-disable-next-line no-console
-                  console.warn('Error checking symbol layer:', e);
-                }
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn('Error creating updated POI symbol layer:', e);
               }
             } catch (e) {
               // eslint-disable-next-line no-console
@@ -254,10 +249,16 @@ function App() {
             mapInstance.removeSource('clalit-accessibility-heatmap-new');
           }
           
-          // Add new GeoJSON source
+          // Add new GeoJSON source for heatmap
           mapInstance.addSource('clalit-accessibility-heatmap-new', {
             type: 'geojson',
             data: process.env.PUBLIC_URL + '/accessibility_heatmap_otp (17 Sept).geojson'
+          });
+
+          // Add new GeoJSON source for updated clinic data
+          mapInstance.addSource('clalit-poi-updated', {
+            type: 'geojson',
+            data: process.env.PUBLIC_URL + '/clalit_poi_eng_1809.json'
           });
           
           // Create new heatmap layer using the new data source
