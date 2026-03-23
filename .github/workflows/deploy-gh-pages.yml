@@ -1,5 +1,11 @@
 # Publishes build/ to branch gh-pages (same as npm run deploy).
 # Requires repo secret: REACT_APP_MAPBOX_TOKEN (Mapbox public token).
+#
+# If deploy fails with "git failed with exit code 1":
+# 1) Repo → Settings → Actions → General → Workflow permissions →
+#    enable "Read and write permissions" (not read-only), Save.
+# 2) Optional: create a classic PAT with "repo" scope, add secret GH_PAGES_TOKEN;
+#    this workflow uses it when set, otherwise GITHUB_TOKEN.
 
 name: Deploy to GitHub Pages
 
@@ -18,6 +24,8 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +53,8 @@ jobs:
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAGES_TOKEN || secrets.GITHUB_TOKEN }}
           publish_dir: ./build
           force_orphan: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
