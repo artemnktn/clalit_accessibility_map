@@ -21,7 +21,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "geojson:clinic-matrix": "node scripts/reproject-clinic-matrix.js",
+    "geojson:cell-min-time": "node scripts/reproject-cell-min-time-groups.js"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +44,7 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "gh-pages": "^6.3.0",
+    "proj4": "^2.20.4"
   }
 }

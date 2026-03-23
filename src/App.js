@@ -1,7 +1,190 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './App.css';
+
+/** Times at or above this are treated as “no reachable clinic” for the current filter. */
+const HEATMAP_NO_SERVICE_MIN = 9999;
+
+/** Union of clinic IDs that offer any of the selected specialisations (OR). Empty / null selection → no filter (all clinics). */
+function getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex) {
+  if (!selectedSpecializations || selectedSpecializations.length === 0) return null;
+  const needles = new Set(selectedSpecializations.map((s) => String(s).toLowerCase()));
+  const idSet = new Set();
+  for (const c of clinicSpecIndex) {
+    if (c.specs.some((s) => needles.has(s.toLowerCase()))) idSet.add(c.id);
+  }
+  return Array.from(idSet);
+}
+
+function minTimeAcrossClinics(properties, clinicIds, modeKey) {
+  let best = Infinity;
+  for (const id of clinicIds) {
+    const key = `${id}_${modeKey}_min`;
+    const v = Number(properties[key]);
+    if (!Number.isNaN(v)) best = Math.min(best, v);
+  }
+  return best === Infinity ? HEATMAP_NO_SERVICE_MIN : best;
+}
+
+const COVERAGE_TIME_RANGES = [10, 15, 20, 30];
+const COVERAGE_AGE_GROUPS = ['0-4', '5-18', '19-64', '65+'];
+const COVERAGE_MODES = ['walk', 'car', 'transit'];
+
+const AGE_POP_KEY = {
+  '0-4': 'age_0_4',
+  '5-18': 'age_5_18',
+  '19-64': 'age_19_64',
+  '65+': 'age_65_plus',
+};
+
+/** Base travel time from cell_min_time_groups for that age cohort (before filter delta). */
+function cellBaseAgeMinutes(cellProps, mode, ageGroup) {
+  const prefix = mode === 'walk' ? 'min_walk' : mode === 'car' ? 'min_car' : 'min_transit';
+  const t1 = Number(cellProps[`${prefix}_1_24`]);
+  const t25 = Number(cellProps[`${prefix}_25`]);
+  const t26 = Number(cellProps[`${prefix}_26`]);
+  if (ageGroup === '0-4' || ageGroup === '5-18') {
+    return t1;
+  }
+  if (ageGroup === '65+') {
+    return t26;
+  }
+  if (!Number.isFinite(t1) || !Number.isFinite(t25) || !Number.isFinite(t26)) {
+    return NaN;
+  }
+  return (t1 + t25 + t26) / 3;
+}
+
+function aggregateAgeCoverageForRange(
+  cellFeatures,
+  matrixByIndex,
+  filteredClinicIds,
+  mode,
+  rangeMin,
+  ageGroup
+) {
+  const modeKey = mode === 'walk' ? 'WALK' : mode === 'car' ? 'CAR' : 'TRANSIT';
+  const popKey = AGE_POP_KEY[ageGroup];
+  let total = 0;
+  let accessible = 0;
+
+  for (const f of cellFeatures) {
+    const cp = f.properties || {};
+    const mProps = matrixByIndex.get(cp.index);
+    if (!mProps) continue;
+
+    const pop = Number(cp[popKey]) || 0;
+    if (pop <= 0) continue;
+
+    const baseline = Number(mProps[`${mode}_min`]);
+    if (!Number.isFinite(baseline)) continue;
+
+    let filtered;
+    if (filteredClinicIds === null) {
+      filtered = baseline;
+    } else if (filteredClinicIds.length === 0) {
+      filtered = HEATMAP_NO_SERVICE_MIN;
+    } else {
+      filtered = minTimeAcrossClinics(mProps, filteredClinicIds, modeKey);
+    }
+
+    const delta = filtered - baseline;
+    const baseAgeTime = cellBaseAgeMinutes(cp, mode, ageGroup);
+    if (!Number.isFinite(baseAgeTime)) continue;
+
+    const adjusted = Math.max(0, baseAgeTime + delta);
+    total += pop;
+    if (adjusted <= rangeMin) accessible += pop;
+  }
+
+  const percentage = total > 0 ? Math.round((100 * accessible) / total) : 0;
+  return { percentage, total, accessible };
+}
+
+function transformDemographicsAccessibility(data) {
+  const transformedData = {};
+  Object.keys(data).forEach((mode) => {
+    transformedData[mode] = {};
+    Object.keys(data[mode]).forEach((timeRange) => {
+      const rangeNum = parseInt(timeRange.replace('min', ''), 10);
+      transformedData[mode][rangeNum] = {};
+      Object.keys(data[mode][timeRange]).forEach((age) => {
+        transformedData[mode][rangeNum][age] = {
+          percentage: Math.round(data[mode][timeRange][age].percentage),
+          total: data[mode][timeRange][age].total_population,
+          accessible: data[mode][timeRange][age].accessible_population,
+        };
+      });
+    });
+  });
+  return transformedData;
+}
+
+function buildCoverageFromCellAndMatrix(matrixFC, cellFC, selectedSpecializations, clinicSpecIndex) {
+  const matrixByIndex = new Map();
+  for (const f of matrixFC.features || []) {
+    const ix = f.properties?.index;
+    if (ix != null) matrixByIndex.set(ix, f.properties);
+  }
+
+  const filteredIds = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
+  const cellFeatures = cellFC.features || [];
+
+  const out = { walk: {}, car: {}, transit: {} };
+  for (const mode of COVERAGE_MODES) {
+    for (const r of COVERAGE_TIME_RANGES) {
+      out[mode][r] = {};
+      for (const ageGroup of COVERAGE_AGE_GROUPS) {
+        out[mode][r][ageGroup] = aggregateAgeCoverageForRange(
+          cellFeatures,
+          matrixByIndex,
+          filteredIds,
+          mode,
+          r,
+          ageGroup
+        );
+      }
+    }
+  }
+  return out;
+}
+
+function buildFilteredHeatmapGeoJSON(rawFC, filteredClinicIds) {
+  if (!rawFC?.features) return rawFC;
+  if (filteredClinicIds === null) return rawFC;
+  if (filteredClinicIds.length === 0) {
+    return {
+      type: 'FeatureCollection',
+      features: rawFC.features.map((f) => ({
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: {
+          ...f.properties,
+          walk_min: HEATMAP_NO_SERVICE_MIN,
+          car_min: HEATMAP_NO_SERVICE_MIN,
+          transit_min: HEATMAP_NO_SERVICE_MIN,
+        },
+      })),
+    };
+  }
+  return {
+    type: 'FeatureCollection',
+    features: rawFC.features.map((f) => {
+      const p = f.properties;
+      return {
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: {
+          ...p,
+          walk_min: minTimeAcrossClinics(p, filteredClinicIds, 'WALK'),
+          car_min: minTimeAcrossClinics(p, filteredClinicIds, 'CAR'),
+          transit_min: minTimeAcrossClinics(p, filteredClinicIds, 'TRANSIT'),
+        },
+      };
+    }),
+  };
+}
 
 function App() {
   const mapContainerRef = useRef(null);
@@ -19,45 +202,156 @@ function App() {
   const carBtnRef = useRef(null);
   const transitBtnRef = useRef(null);
   const [ageGroup, setAgeGroup] = useState('5-18');
-  const [coverageData, setCoverageData] = useState(null);
   const [popupData, setPopupData] = useState(null);
   const [popupPosition, setPopupPosition] = useState('above');
   const [is3DMode, setIs3DMode] = useState(window.innerWidth <= 768);
   const [hoveredInfo, setHoveredInfo] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [pulseValue, setPulseValue] = useState(0);
+  const [allSpecializations, setAllSpecializations] = useState([]);
+  const [clinicSpecIndex, setClinicSpecIndex] = useState([]);
+  const [poiSymbolLayerReady, setPoiSymbolLayerReady] = useState(false);
+  const [selectedSpecializations, setSelectedSpecializations] = useState([]);
+  const [specSearchQuery, setSpecSearchQuery] = useState('');
+  const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+  const [specHighlightIndex, setSpecHighlightIndex] = useState(0);
+  const specInputRef = useRef(null);
+  const specPanelRef = useRef(null);
+  const matrixRawRef = useRef(null);
+  const cellMinTimeRawRef = useRef(null);
+  const [matrixReady, setMatrixReady] = useState(false);
+  const [demographicsCoverage, setDemographicsCoverage] = useState(null);
 
-
-  // Load real data from JSON file
+  // Clinics + matrix + cell age/time grid (heatmap + age metrics share filter logic)
   useEffect(() => {
-    fetch(process.env.PUBLIC_URL + '/demographics_accessibility_otp_FINAL.json')
-      .then(response => response.json())
-      .then(data => {
-        // Transform data to match our expected format
-        const transformedData = {};
-        Object.keys(data).forEach(mode => {
-          transformedData[mode] = {};
-          Object.keys(data[mode]).forEach(timeRange => {
-            const rangeNum = parseInt(timeRange.replace('min', ''));
-            transformedData[mode][rangeNum] = {};
-            Object.keys(data[mode][timeRange]).forEach(age => {
-              transformedData[mode][rangeNum][age] = {
-                percentage: Math.round(data[mode][timeRange][age].percentage),
-                total: data[mode][timeRange][age].total_population,
-                accessible: data[mode][timeRange][age].accessible_population
-              };
-            });
-          });
-        });
-        setCoverageData(transformedData);
+    const base = process.env.PUBLIC_URL || '';
+    Promise.all([
+      fetch(`${base}/clinics_final_with_specializations_en_full_final2203.geojson`).then((r) => r.json()),
+      fetch(`${base}/clinic_accessibility_matrix_full.geojson`).then((r) => r.json()),
+      fetch(`${base}/cell_min_time_groups.geojson`).then((r) => r.json()),
+    ])
+      .then(([clinicData, matrixData, cellData]) => {
+        const specSet = new Set();
+        const index = [];
+        for (const f of clinicData.features || []) {
+          const p = f.properties || {};
+          const parts = String(p.specializations || '')
+            .split(';')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          parts.forEach((s) => specSet.add(s));
+          if (p.clinic_id) index.push({ id: p.clinic_id, specs: parts });
+        }
+        setAllSpecializations(Array.from(specSet).sort((a, b) => a.localeCompare(b)));
+        setClinicSpecIndex(index);
+        matrixRawRef.current = matrixData;
+        cellMinTimeRawRef.current = cellData;
+        setMatrixReady(true);
       })
-      .catch(error => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load demographics data:', error);
-        // Set fallback data to prevent crashes
-        setCoverageData({});
+      .catch(() => {
+        setAllSpecializations([]);
+        setClinicSpecIndex([]);
+        matrixRawRef.current = null;
+        cellMinTimeRawRef.current = null;
+        setMatrixReady(false);
       });
   }, []);
+
+  useEffect(() => {
+    fetch(process.env.PUBLIC_URL + '/demographics_accessibility_otp_FINAL.json')
+      .then((r) => r.json())
+      .then((data) => setDemographicsCoverage(transformDemographicsAccessibility(data)))
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load demographics_accessibility_otp_FINAL.json:', error);
+        setDemographicsCoverage(null);
+      });
+  }, []);
+
+  const coverageData = useMemo(() => {
+    if (selectedSpecializations.length > 0) {
+      if (!matrixReady || !matrixRawRef.current || !cellMinTimeRawRef.current) return null;
+      return buildCoverageFromCellAndMatrix(
+        matrixRawRef.current,
+        cellMinTimeRawRef.current,
+        selectedSpecializations,
+        clinicSpecIndex
+      );
+    }
+    return demographicsCoverage;
+  }, [matrixReady, selectedSpecializations, clinicSpecIndex, demographicsCoverage]);
+
+  // Apply specialization filter to clinic symbol layer
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !poiSymbolLayerReady || !map.getLayer('clalit-poi-icons')) return;
+    const baseFilter = ['==', ['geometry-type'], 'Point'];
+    if (!selectedSpecializations.length) {
+      try {
+        map.setFilter('clalit-poi-icons', baseFilter);
+      } catch (_) {}
+      return;
+    }
+    const ids = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
+    try {
+      if (ids.length === 0) {
+        map.setFilter('clalit-poi-icons', ['all', baseFilter, ['==', ['get', 'clinic_id'], '__none__']]);
+      } else {
+        map.setFilter('clalit-poi-icons', ['all', baseFilter, ['in', ['get', 'clinic_id'], ['literal', ids]]]);
+      }
+    } catch (_) {}
+  }, [selectedSpecializations, clinicSpecIndex, poiSymbolLayerReady]);
+
+  // Close specialization dropdown on outside click
+  useEffect(() => {
+    if (!specDropdownOpen) return;
+    const onDown = (e) => {
+      if (specPanelRef.current && !specPanelRef.current.contains(e.target)) {
+        setSpecDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [specDropdownOpen]);
+
+  // Heatmap = min travel time to nearest clinic among those visible for the current filter (all clinics, or spec subset)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !matrixReady || !matrixRawRef.current) return;
+    try {
+      const src = map.getSource('clalit-accessibility-heatmap-new');
+      if (!src || typeof src.setData !== 'function') return;
+      const filteredIds = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
+      const data = buildFilteredHeatmapGeoJSON(matrixRawRef.current, filteredIds);
+      src.setData(data);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Heatmap source setData:', e);
+    }
+  }, [selectedSpecializations, clinicSpecIndex, mapLoaded, matrixReady]);
+
+  const specSuggestions = (() => {
+    const q = specSearchQuery.trim().toLowerCase();
+    if (!q) return allSpecializations;
+    return allSpecializations.filter((s) => s.toLowerCase().includes(q));
+  })();
+
+  const toggleSpecialization = (name) => {
+    setSelectedSpecializations((prev) =>
+      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
+    );
+  };
+
+  const removeSpecialization = (name) => {
+    setSelectedSpecializations((prev) => prev.filter((s) => s !== name));
+  };
+
+  const clearSpecializationFilter = () => {
+    setSelectedSpecializations([]);
+    setSpecSearchQuery('');
+    setSpecDropdownOpen(false);
+    setSpecHighlightIndex(0);
+  };
 
   // Animation for clinic icons
   useEffect(() => {
@@ -83,7 +377,7 @@ function App() {
 
 
   useEffect(() => {
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZW1ua3RuIiwiYSI6ImNtN2t0eGJnMzAzcTAybnJ6eGIyNGVwZjQifQ.m31J0mxEu4qvB66LxdGkPg';
+    mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN || '';
 
     const mapInstance = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -171,6 +465,7 @@ function App() {
                   try { mapInstance.setLayoutProperty(symbolLayerId, 'visibility', 'visible'); } catch (_) {}
                   // Ensure POI is visible by default
                   setPoiVisible(true);
+                  setPoiSymbolLayerReady(true);
                   
                   // Add click handler for popup
                   mapInstance.on('click', symbolLayerId, (e) => {
@@ -265,20 +560,20 @@ function App() {
           // Add new GeoJSON source for heatmap
           mapInstance.addSource('clalit-accessibility-heatmap-new', {
             type: 'geojson',
-            data: process.env.PUBLIC_URL + '/accessibility_heatmap_otp (17 Sept).geojson'
+            data: process.env.PUBLIC_URL + '/clinic_accessibility_matrix_full.geojson'
           });
 
           // Add new GeoJSON source for updated clinic data
           mapInstance.addSource('clalit-poi-updated', {
             type: 'geojson',
-            data: process.env.PUBLIC_URL + '/clalit_poi_eng_1809.geojson'
+            data: process.env.PUBLIC_URL + '/clinics_final_with_specializations_en_full_final2203.geojson'
           });
           
           // Create new heatmap layer using the new data source
           const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
           if (!mapInstance.getLayer(newHeatmapLayerId)) {
             // Use dynamic column based on current mode and range
-            const column = `${mode}_${rangeMin}min`;
+            const column = `${mode}_min`;
             const colorColumn = column;
             
             mapInstance.addLayer({
@@ -350,7 +645,7 @@ function App() {
             const properties = feature.properties;
             
             // Get current mode and range to show the right value
-            const column = `${mode}_${rangeMin}min`;
+            const column = `${mode}_min`;
             const value = properties[column];
             
             if (value !== null && value !== undefined) {
@@ -422,7 +717,7 @@ function App() {
           const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
           const heatLayer = mapInstance.getLayer(currentHeatmapLayerId);
         if (heatLayer) {
-          const column = `${mode}_${rangeMin}min`;
+          const column = `${mode}_min`;
           // eslint-disable-next-line no-console
           console.log('Initializing heatmap with column:', column, 'layer:', currentHeatmapLayerId);
           
@@ -435,8 +730,6 @@ function App() {
             ]);
           } catch (_) {}
           
-          const maxRange = rangeMin;
-          const midRange = maxRange / 2;
           const colorColumn = column;
           const colorRamp = [
             'interpolate', ['linear'], ['coalesce', ['to-number', ['get', colorColumn]], 0],
@@ -692,7 +985,7 @@ function App() {
     }
 
     const heatLayer = map.getLayer(currentHeatmapLayerId);
-    const column = `${mode}_${rangeMin}min`;
+    const column = `${mode}_min`;
     
     // Debug logging
     // eslint-disable-next-line no-console
@@ -1015,12 +1308,20 @@ function App() {
           const properties = feature.properties;
           
           // Get current mode and range to show the right value
-          const column = `${mode}_${rangeMin}min`;
+          const column = `${mode}_min`;
           const value = properties[column];
           
           if (value !== null && value !== undefined) {
             const minutes = Math.round(value);
             const density = properties.density || 0;
+            const esc = (s) =>
+              String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;');
+            const safeSpec =
+              selectedSpecializations.length > 0
+                ? selectedSpecializations.map(esc).join(', ')
+                : '';
             
             // Remove any existing custom popup
             const existingPopup = document.querySelector('.custom-heatmap-popup');
@@ -1058,7 +1359,7 @@ function App() {
             `;
             popupElement.innerHTML = `
               <div style="font-size: 14px; margin-bottom: 4px; text-align: left;">${Math.round(density)} people</div>
-              <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic</div>
+              <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic${safeSpec ? ` — ${safeSpec}` : ''}</div>
             `;
             
             // Add to map container
@@ -1082,7 +1383,7 @@ function App() {
     
     // eslint-disable-next-line no-console
     console.log('=== HEATMAP useEffect COMPLETED ===', { mode, rangeMin, is3DMode });
-  }, [mode, rangeMin, mapLoaded, is3DMode]);
+  }, [mode, rangeMin, mapLoaded, is3DMode, selectedSpecializations, matrixReady]);
 
   // Show map when loaded (only on first load)
   useEffect(() => {
@@ -1132,6 +1433,112 @@ function App() {
           transition: 'opacity 0.3s ease-in-out'
         }} 
       />
+
+      <div className="right-panels">
+      <div className="specialization-panel" ref={specPanelRef}>
+        <div className="specialization-card">
+          <h2 className="specialization-title">Accessibility by Clinic Specialisation</h2>
+          <p className="specialization-label">Select one or more specialisations</p>
+          {selectedSpecializations.length > 0 ? (
+            <div className="specialization-chips" aria-label="Selected specialisations">
+              {selectedSpecializations.map((name) => (
+                <span key={name} className="specialization-chip">
+                  <span className="specialization-chip-label">{name}</span>
+                  <button
+                    type="button"
+                    className="specialization-chip-remove"
+                    aria-label={`Remove ${name}`}
+                    onClick={() => removeSpecialization(name)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div
+            className="specialization-input-wrap"
+            role="combobox"
+            aria-expanded={specDropdownOpen}
+            aria-haspopup="listbox"
+            aria-controls="spec-suggestions-list"
+          >
+            <input
+              ref={specInputRef}
+              type="text"
+              className="specialization-input"
+              placeholder="Search and add specialisations…"
+              value={specSearchQuery}
+              onChange={(e) => {
+                setSpecSearchQuery(e.target.value);
+                setSpecDropdownOpen(true);
+                setSpecHighlightIndex(0);
+              }}
+              onFocus={() => setSpecDropdownOpen(true)}
+              onKeyDown={(e) => {
+                if (!specDropdownOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                  setSpecDropdownOpen(true);
+                  return;
+                }
+                if (e.key === 'Escape') {
+                  setSpecDropdownOpen(false);
+                  return;
+                }
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setSpecHighlightIndex((i) => Math.min(i + 1, Math.max(0, specSuggestions.length - 1)));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setSpecHighlightIndex((i) => Math.max(i - 1, 0));
+                } else if (e.key === 'Enter' && specSuggestions.length > 0) {
+                  e.preventDefault();
+                  const pick = specSuggestions[specHighlightIndex] || specSuggestions[0];
+                  toggleSpecialization(pick);
+                }
+              }}
+              aria-autocomplete="list"
+              aria-controls="spec-suggestions-list"
+            />
+            {specSearchQuery || selectedSpecializations.length > 0 ? (
+              <button
+                type="button"
+                className="specialization-clear"
+                aria-label="Clear all"
+                onClick={clearSpecializationFilter}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
+          {specDropdownOpen && specSuggestions.length > 0 ? (
+            <ul className="specialization-dropdown" id="spec-suggestions-list" role="listbox">
+              {specSuggestions.map((name, idx) => {
+                const isOn = selectedSpecializations.includes(name);
+                return (
+                  <li key={name}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={isOn}
+                      className={`specialization-option ${idx === specHighlightIndex ? 'is-highlighted' : ''} ${isOn ? 'is-selected' : ''}`}
+                      onMouseEnter={() => setSpecHighlightIndex(idx)}
+                      onMouseDown={(ev) => ev.preventDefault()}
+                      onClick={() => toggleSpecialization(name)}
+                    >
+                      <span className="specialization-option-text">{name}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          {specDropdownOpen && specSearchQuery.trim() && specSuggestions.length === 0 && allSpecializations.length > 0 ? (
+            <div className="specialization-empty">No matching specialisations</div>
+          ) : null}
+        </div>
+      </div>
+      </div>
+
       <div className="side-panel">
         <div className="control-card">
         <h1 className="card-title">Closer to Care</h1>
@@ -1206,7 +1613,7 @@ function App() {
         </div>
 
         <div className="ranges-row">
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="ranges-row-buttons">
             {(() => {
               // Define available time ranges for each transport mode
               const timeRanges = {
@@ -1231,14 +1638,10 @@ function App() {
           
           {/* 3D Toggle Button - centered on the right */}
           <button
+            type="button"
             className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
             onClick={toggle3D}
             title="Toggle 3D extrusion"
-            style={{ 
-              zIndex: 1000,
-              position: 'relative',
-              pointerEvents: 'auto'
-            }}
           >
             <span className="legend-3d-text">3D</span>
           </button>
@@ -1246,71 +1649,69 @@ function App() {
 
         </div>
 
-      </div>
+        <div className="age-card-below">
+          <div className="section-title">Accessibility metrics by age groups</div>
 
-      {/* Accessibility metrics by age groups - Below Closer to Care */}
-      <div className="age-card-below">
-        <div className="section-title">Accessibility metrics by age groups</div>
-        
-        <div className="age-buttons">
-          {['0-4', '5-18', '19-64', '65+'].map((g) => (
-            <button
-              key={g}
-              className={`age-btn ${ageGroup === g ? 'active' : ''}`}
-              onClick={() => setAgeGroup(g)}
+          <div className="age-buttons">
+            {['0-4', '5-18', '19-64', '65+'].map((g) => (
+              <button
+                key={g}
+                className={`age-btn ${ageGroup === g ? 'active' : ''}`}
+                onClick={() => setAgeGroup(g)}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+
+          <div className="age-body">
+            {(() => {
+              if (!coverageData) {
+                return <p className="card-text">Loading data...</p>;
+              }
+
+              const data = coverageData[mode]?.[rangeMin]?.[ageGroup];
+              if (!data) return null;
+
+              const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
+
+              let modeText;
+              if (mode === 'walk') {
+                modeText = `walk to a Clalit Clinic in ${rangeMin}min`;
+              } else if (mode === 'car') {
+                modeText = `Drive to a Clalit Clinic in ${rangeMin}min`;
+              } else if (mode === 'transit') {
+                modeText = `get to a Clalit Clinic by Public Transport in ${rangeMin}min`;
+              }
+
+              return (
+                <>
+                  <p className="card-text card-text--emphasis">
+                    {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeText}.
+                  </p>
+                  <p className="card-text">
+                    This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+
+          <div className="divider" />
+
+          <div className="card-text" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>in collaboration with</span>
+            <a
+              href="https://www.nurlab.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nur-logo-link"
             >
-              {g}
-            </button>
-          ))}
+              <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
+            </a>
+          </div>
         </div>
 
-        <div className="age-body">
-          {(() => {
-            if (!coverageData) {
-              return <p className="card-text">Loading data...</p>;
-            }
-            
-            const data = coverageData[mode]?.[rangeMin]?.[ageGroup];
-            if (!data) return null;
-            
-            const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
-            
-            // Определяем текст для каждого режима
-            let modeText;
-            if (mode === 'walk') {
-              modeText = `walk to a Clalit Clinic in ${rangeMin}min`;
-            } else if (mode === 'car') {
-              modeText = `Drive to a Clalit Clinic in ${rangeMin}min`;
-            } else if (mode === 'transit') {
-              modeText = 'get to a Clalit Clinic by Public Transport in 15min';
-            }
-            
-            return (
-              <>
-                <p className="card-text" style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>
-                  {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeText}.
-                </p>
-                <p className="card-text">
-                  This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
-                </p>
-              </>
-            );
-          })()}
-        </div>
-
-        <div className="divider" />
-
-        <div className="card-text" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>in collaboration with</span>
-          <a 
-            href="https://www.nurlab.org/" 
-          target="_blank"
-          rel="noopener noreferrer"
-            className="nur-logo-link"
-          >
-            <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
-          </a>
-        </div>
       </div>
 
       {/* Stretched legend without 3D button */}
@@ -1343,122 +1744,146 @@ function App() {
       </div>
 
       {/* Simple popup */}
-      {popupData && (
-        <div className="popup-overlay">
-          <div 
-            className={`popup-content ${popupPosition === 'below' ? 'below' : ''}`}
-            style={{
-              left: popupData.coordinates.x,
-              top: popupData.coordinates.y
-            }}
-          >
-            <div className="popup-header">
-              <div>
-                <h3>{(popupData.properties.name || 'Clinic Information').replace(/_/g, ' ')}</h3>
-                {popupData.properties.neighborhood && (
-                  <p className="popup-neighborhood">{popupData.properties.neighborhood}</p>
-                )}
-              </div>
-              <button className="popup-close" onClick={() => setPopupData(null)}>×</button>
-            </div>
-            <div className="popup-body">
-              {/* Pie Chart for categories */}
-              <div className="pie-chart-container">
-                <svg width="120" height="120" className="pie-chart">
-                  {(() => {
-                    const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
-                    const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
-                    const data = categories.map(cat => ({
-                      name: cat,
-                      value: parseFloat(popupData.properties[cat]) || 0,
-                      color: colors[categories.indexOf(cat)]
-                    })).filter(item => item.value > 0);
-                    
-                    if (data.length === 0) return null;
-                    
-                    const total = data.reduce((sum, item) => sum + item.value, 0);
-                    let currentAngle = 0;
-                    
-                    return data.map((item, index) => {
-                      // const percentage = (item.value / total) * 100;
-                      const angle = (item.value / total) * 360;
-                      const startAngle = currentAngle;
-                      const endAngle = currentAngle + angle;
-                      currentAngle += angle;
-                      
-                      const radius = 50;
-                      const centerX = 60;
-                      const centerY = 60;
-                      
-                      const startAngleRad = (startAngle - 90) * Math.PI / 180;
-                      const endAngleRad = (endAngle - 90) * Math.PI / 180;
-                      
-                      const x1 = centerX + radius * Math.cos(startAngleRad);
-                      const y1 = centerY + radius * Math.sin(startAngleRad);
-                      const x2 = centerX + radius * Math.cos(endAngleRad);
-                      const y2 = centerY + radius * Math.sin(endAngleRad);
-                      
-                      const largeArcFlag = angle > 180 ? 1 : 0;
-                      
-                      const innerRadius = 20;
-                      const innerStartAngleRad = (startAngle - 90) * Math.PI / 180;
-                      const innerEndAngleRad = (endAngle - 90) * Math.PI / 180;
-                      
-                      const innerX1 = centerX + innerRadius * Math.cos(innerStartAngleRad);
-                      const innerY1 = centerY + innerRadius * Math.sin(innerStartAngleRad);
-                      const innerX2 = centerX + innerRadius * Math.cos(innerEndAngleRad);
-                      const innerY2 = centerY + innerRadius * Math.sin(innerEndAngleRad);
-                      
-                      const pathData = [
-                        `M ${x1} ${y1}`,
-                        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                        `L ${innerX2} ${innerY2}`,
-                        `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerX1} ${innerY1}`,
-                        'Z'
-                      ].join(' ');
-                      
-                      return (
-                        <path
-                          key={index}
-                          d={pathData}
-                          fill={item.color}
-                          stroke="white"
-                          strokeWidth="1"
-                        />
-                      );
-                    });
-                  })()}
-                </svg>
-                
-                {/* Legend */}
-                <div className="pie-legend">
-                  {(() => {
-                    const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
-                    const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
-                    
-                    // Calculate total for percentage calculation
-                    const total = categories.reduce((sum, cat) => sum + (parseFloat(popupData.properties[cat]) || 0), 0);
-                    
-                    return categories.map((cat, index) => {
-                      const value = parseFloat(popupData.properties[cat]) || 0;
-                      if (value === 0) return null;
-                      
-                      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                      
-                      return (
-                        <div key={cat} className="legend-item">
-                          <div className="legend-color" style={{ backgroundColor: colors[index] }}></div>
-                          <span className="legend-label">{cat} ({percentage}%)</span>
-                        </div>
-                      );
-                    });
-                  })()}
+      {popupData && (() => {
+        const p = popupData.properties;
+        const isClinic = p.clinic_id != null || p.clinic_name_english != null;
+        const title = (isClinic
+          ? (p.clinic_name_english || p.clinic_name_hebrew || 'Clinic')
+          : (p.name || 'Clinic Information')
+        ).replace(/_/g, ' ');
+        return (
+          <div className="popup-overlay">
+            <div
+              className={`popup-content ${popupPosition === 'below' ? 'below' : ''}`}
+              style={{
+                left: popupData.coordinates.x,
+                top: popupData.coordinates.y
+              }}
+            >
+              <div className="popup-header">
+                <div>
+                  <h3>{title}</h3>
+                  {isClinic ? (
+                    p.clinic_name_english && p.clinic_name_hebrew ? (
+                      <p className="popup-neighborhood">{p.clinic_name_hebrew}</p>
+                    ) : null
+                  ) : (
+                    p.neighborhood ? (
+                      <p className="popup-neighborhood">{p.neighborhood}</p>
+                    ) : null
+                  )}
                 </div>
+                <button type="button" className="popup-close" onClick={() => setPopupData(null)}>×</button>
+              </div>
+              <div className="popup-body">
+                {isClinic ? (
+                  <>
+                    {p.provider ? (
+                      <div className="popup-row"><strong>Provider</strong> {p.provider}</div>
+                    ) : null}
+                    {p.address ? (
+                      <div className="popup-row"><strong>Address</strong> {p.address}</div>
+                    ) : null}
+                    {p.specializations ? (
+                      <div className="popup-row"><strong>Specializations</strong> {p.specializations}</div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="pie-chart-container">
+                    <svg width="120" height="120" className="pie-chart">
+                      {(() => {
+                        const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
+                        const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
+                        const data = categories.map(cat => ({
+                          name: cat,
+                          value: parseFloat(p[cat]) || 0,
+                          color: colors[categories.indexOf(cat)]
+                        })).filter(item => item.value > 0);
+
+                        if (data.length === 0) return null;
+
+                        const total = data.reduce((sum, item) => sum + item.value, 0);
+                        let currentAngle = 0;
+
+                        return data.map((item, index) => {
+                          const angle = (item.value / total) * 360;
+                          const startAngle = currentAngle;
+                          const endAngle = currentAngle + angle;
+                          currentAngle += angle;
+
+                          const radius = 50;
+                          const centerX = 60;
+                          const centerY = 60;
+
+                          const startAngleRad = (startAngle - 90) * Math.PI / 180;
+                          const endAngleRad = (endAngle - 90) * Math.PI / 180;
+
+                          const x1 = centerX + radius * Math.cos(startAngleRad);
+                          const y1 = centerY + radius * Math.sin(startAngleRad);
+                          const x2 = centerX + radius * Math.cos(endAngleRad);
+                          const y2 = centerY + radius * Math.sin(endAngleRad);
+
+                          const largeArcFlag = angle > 180 ? 1 : 0;
+
+                          const innerRadius = 20;
+                          const innerStartAngleRad = (startAngle - 90) * Math.PI / 180;
+                          const innerEndAngleRad = (endAngle - 90) * Math.PI / 180;
+
+                          const innerX1 = centerX + innerRadius * Math.cos(innerStartAngleRad);
+                          const innerY1 = centerY + innerRadius * Math.sin(innerStartAngleRad);
+                          const innerX2 = centerX + innerRadius * Math.cos(innerEndAngleRad);
+                          const innerY2 = centerY + innerRadius * Math.sin(innerEndAngleRad);
+
+                          const pathData = [
+                            `M ${x1} ${y1}`,
+                            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                            `L ${innerX2} ${innerY2}`,
+                            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerX1} ${innerY1}`,
+                            'Z'
+                          ].join(' ');
+
+                          return (
+                            <path
+                              key={index}
+                              d={pathData}
+                              fill={item.color}
+                              stroke="white"
+                              strokeWidth="1"
+                            />
+                          );
+                        });
+                      })()}
+                    </svg>
+
+                    <div className="pie-legend">
+                      {(() => {
+                        const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
+                        const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
+
+                        const total = categories.reduce((sum, cat) => sum + (parseFloat(p[cat]) || 0), 0);
+
+                        return categories.map((cat, index) => {
+                          const value = parseFloat(p[cat]) || 0;
+                          if (value === 0) return null;
+
+                          const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+
+                          return (
+                            <div key={cat} className="legend-item">
+                              <div className="legend-color" style={{ backgroundColor: colors[index] }}></div>
+                              <span className="legend-label">{cat} ({percentage}%)</span>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Info Tooltip */}
       <div 

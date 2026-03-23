@@ -1,0 +1,137 @@
+﻿specialization_hebrew,specialization_english,specialization_group
+אבחון התפתחות הילד,Child development assessment,developmental_peds
+אודיולוגיה - בדיקת שמיעה,Audiology - hearing test,audiology
+אולטרסאונד זקיקים,Follicular ultrasound,ob_ultrasound
+אולטרסאונד שד,Breast ultrasound,imaging_breast
+אונקולוגיה,Oncology,oncology
+אוסטיאופתיה,Osteopathy,complementary
+אורוגניקולוגיה,Urogynecology,urogynecology
+אורולוגיה,Urology,urology
+אורולוגיה ילדים,Pediatric urology,urology_peds
+אורתופדיה,Orthopedics,orthopedics
+אורתופדיה - כף רגל,Orthopedics Legs,orthopedics
+אורתופדיה - רפואת ספורט,Orthopedics Sport,orthopedics
+אורתופטיקה - טיפול בפזילה ובמיקוד הראיה,Orthoptics (strabismus and visual focus),ophthalmology
+אינהלציה,Inhalation therapy,pulmonology
+אלרגולוגיה ואימונולוגיה קלינית,Allergology and Clinical Immunology,allergology
+אנדוקרינולוגיה,Endocrinology,endocrinology
+אנדוקרינולוגיה - אוסטאופורוזיס-צפיפות העצם,Endocrinology - osteoporosis / bone density,endocrinology
+אף אוזן גרון,Ear nose and throat (ENT),ent
+בדיקת BRCA,BRCA genetic test,genetics_oncology
+בדיקת CT (סיטי),CT scan,imaging
+בדיקת EEG (אי אי ג'י),EEG,imaging
+בדיקת EMG (אי אמ ג'י),EMG,imaging
+בדיקת אקג (EKG),Electrocardiogram (ECG),cardiology
+בדיקת אקו לב עוברי,Fetal echocardiography,ob_ultrasound
+בדיקת ארגומטריה (מבחן מאמץ),Treadmill stress test,cardiology
+בדיקת גנטיקה,Genetic testing,genetics
+בדיקת דם לחלבון עוברי/סקר ביוכימי שני,Second trimester maternal serum screening,prenatal_screening
+בדיקת הולטר לב,Holter ECG monitoring,cardiology
+בדיקת הולטר לחץ דם,Ambulatory blood pressure monitoring,cardiology
+בדיקת זרע,Semen analysis,fertility
+בדיקת ממוגרפיה - גילוי מוקדם סרטן השד,Screening mammography,imaging_breast
+בדיקת סוכר,Blood sugar test,lab_diabetes
+בדיקת פזילה לילדים,Strabismus test for children,ophthalmology
+בדיקת פטריות,Fungal culture/test,lab
+"בדיקת צהבת לתינוק (בילירובין, ביליצ'ק)",Neonatal jaundice test (bilirubin),neonatology
+בדיקת צוואר הרחם כולל קולפוסקופיה,Cervical exam including colposcopy,gynecology
+בדיקת קולונוסקופיה,Colonoscopy,gastroenterology
+בדיקת שדה ראיה,Visual field test,ophthalmology
+בדיקת שתן,Urine test,lab
+בדיקת תפקודי ריאות,Pulmonary function test,pulmonology
+בני נוער - גיל ההתבגרות,Adolescent medicine,pediatrics
+גלוקומטר למדידת רמת סוכר בדם,Glucose meter blood sugar measurement,lab_diabetes
+גסטרואנטרולוגיה,Gastroenterology,gastroenterology
+גסטרוסקופיה,Gastroscopy,gastroenterology
+גריאטריה,Geriatrics,geriatrics
+דופלר - כלי דם,Vascular Doppler ultrasound,vascular
+הדבקת חתכים,Wound closure (skin adhesive),minor_procedures
+הומאופתיה,Homeopathy,complementary
+הזרקות אנטי אלרגיות,Anti-allergy injections,allergology
+הזרקות נגד כאבים,Pain relief injections,pain_clinic
+הזרקות תוך עיניות,Intravitreal injections,ophthalmology
+הכנסת קטטר,Catheter insertion,minor_procedures
+המטולוגיה,Hematology,hematology
+העמסת סוכר 100,Glucose tolerance test 100g,lab_diabetes
+העמסת סוכר 50,Glucose tolerance test 50g,lab_diabetes
+העמסת סוכר 75,Glucose tolerance test 75g,lab_diabetes
+הרדמה,Anesthesiology,anesthesiology
+התאמה וניפוק משקפי ראייה לילדים עד גיל 8,Fitting and dispensing eyeglasses for children under 8,ophthalmology
+התפתחות הילד,Child development services,developmental_peds
+חיסון נגד פוליו,Polio vaccination,vaccination
+חיסון נגד קורונה (מודרנה),COVID-19 vaccination (Moderna),vaccination
+חיסון נגד שלבקת חוגרת,Herpes zoster vaccination,vaccination
+חיסון נגד שעלת,Pertussis vaccination,vaccination
+חיסון נגד שפעת,Influenza vaccination,vaccination
+"חיסונים, ייעוץ והדרכה למטייל",Travel vaccinations and counseling,travel_clinic
+טווינא,Tuina (Chinese manual therapy),complementary
+טיפול בכאב,Pain management,pain_clinic
+טיפול נמרץ כללי,General intensive care,critical_care
+טיפת חלב,Well-baby clinic (Tipat Halav),maternal_child_health
+ייעוץ בריאות הנפש במרפאה ראשונית מבוגרים,Mental health counseling in primary care (adults),mental_health
+ייעוץ הורי,Parental counseling,counseling
+ילדים,Pediatrics,pediatrics
+כירופרקטיקה,Chiropractic,complementary
+כירורגיה,Surgery,surgery
+כירורגיה כלי דם,Vascular surgery,surgery_vascular
+כירורגיה פלסטית,Plastic surgery,surgery_plastic
+כירורגיית שד,Breast surgery,surgery_breast
+מגע גוף נפש  - שיחה עם מגע תומך,Body-mind touch therapy with counseling,complementary
+מחלות זיהומיות,Infectious diseases,infectious_diseases
+מחלות ריאה,Pulmonology,pulmonology
+מחלות ריאה ילדים,Pediatric pulmonology,pulmonology_peds
+מלווה לחולה אונקולוגי,Oncology patient support,oncology_support
+מעקב הריון כולל הריון בר סיכון,Pregnancy follow-up including high risk,obstetrics
+מתן טטנוס,Tetanus injection,vaccination
+נוירולוגיה,Neurology,neurology
+נוירולוגיה ילדים,Pediatric neurology,neurology_peds
+נטורופתיה,Naturopathy,complementary
+ניטור עוברי - מוניטור,Fetal monitoring (CTG),obstetrics
+ניתוחים כירורגיים,Surgical operations,surgery
+ניתוחים פלסטיים,Plastic surgery,surgery_plastic
+נפרולוגיה ילדים,Pediatric nephrology,nephrology_peds
+נשים,Obstetrics and gynecology,women_health
+נשים - מיון,Emergency medicine,emergency
+נשים - פוריות,Fertility clinic (women),fertility
+סוכרת,Diabetes clinic,diabetes_clinic
+סקירת מערכות,Fetal anomaly scan,ob_ultrasound
+עור,Dermatology,dermatology
+עיניים,Ophthalmology,ophthalmology
+עיניים - גלאוקומה,Ophthalmology,ophthalmology
+עיניים טומוגרפיה- OCT,Ocular OCT (optical coherence tomography),ophthalmology
+עיניים רשתית,Ophthalmology,ophthalmology
+עיסוי הוליסטי,Holistic massage,complementary
+עירוי נוזלים,Intravenous fluids,day_care
+פלדנקרייז,Feldenkrais method,complementary
+פסיכיאטריה,Psychiatry,mental_health
+פסיכיאטריה ילדים ונוער,Child and adolescent psychiatry,mental_health
+פצעים קשיי ריפוי,Chronic wound care,wound_care
+פרוקטולוגיה,Proctology,surgery_proctology
+צילום רנטגן,X-ray imaging,imaging
+קיבוע גבס,Casting (plaster immobilization),orthopedics
+קרדיולוגיה,Cardiology,cardiology
+קרדיולוגיה ילדים,Pediatric cardiology,cardiology_peds
+ראומטולוגיה,Rheumatology,rheumatology
+רדיולוגיה אבחנתית (רנטגן),Diagnostic radiology (X-ray),imaging
+רדיולוגיה פולשנית/אבחנתית - צינתור וירטואלי,Interventional/diagnostic radiology - virtual angiography,imaging_interventional
+ריפוי בדיבור מבוגרים,Speech therapy for adults,rehab
+רפואה גרעינית - ילדים ומבוגרים,Nuclear medicine - adults and children,nuclear_medicine
+רפואה דחופה,Emergency medicine,emergency
+רפואה משלימה,Complementary medicine,complementary
+רפואה סינית ודיקור,Chinese medicine and acupuncture,complementary
+רפואה פנימית,Internal medicine,internal_medicine
+רפואת ילדים בערב,Evening pediatric clinic,pediatrics
+רפואת משפחה,Family medicine,primary_care
+רפואת שיניים,Dentistry,dentistry
+רפואת שיניים ילדים,Pediatric dentistry,dentistry_peds
+רפלקסולוגיה,Reflexology,complementary
+רשתית העין - טיפול בלייזר,Retinal laser treatment,ophthalmology
+שד - ביופסיה,Breast biopsy,imaging_breast
+שטיפת קטטר,Catheter flushing,minor_procedures
+שיאצו,Shiatsu,complementary
+שירותי מעבדה,Laboratory services,lab
+שירותי סיעוד (אחיות/אחים),Nursing services,nursing
+שירותי רוקחות,Pharmacy services,pharmacy
+שקיפות עורפית - אולטרסאונד,Nuchal translucency ultrasound,ob_ultrasound
+שקיפות עורפית - בדיקת דם,Nuchal translucency blood test,prenatal_screening
+תפירת חתכים,Wound suturing,minor_procedures

@@ -21,12 +21,18 @@ git clone https://github.com/artemnktn/clalit_accessibility_map.git
 npm install
 ```
 
-3. Start the development server:
+3. Mapbox token (required for the map):
+```bash
+cp .env.example .env.local
+```
+Edit `.env.local` and set `REACT_APP_MAPBOX_TOKEN` to your [Mapbox public access token](https://account.mapbox.com/access-tokens/).
+
+4. Start the development server:
 ```bash
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser (or the path set in `homepage` in `package.json` when using `npm start`).
 
 ## Data Sources
 
