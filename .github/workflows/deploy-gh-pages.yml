@@ -1,11 +1,8 @@
-# Publishes build/ to branch gh-pages (same as npm run deploy).
+# Publishes the CRA build to GitHub Pages via the official Pages API (no git push to gh-pages).
 # Requires repo secret: REACT_APP_MAPBOX_TOKEN (Mapbox public token).
 #
-# If deploy fails with "git failed with exit code 1":
-# 1) Repo → Settings → Actions → General → Workflow permissions →
-#    enable "Read and write permissions" (not read-only), Save.
-# 2) Optional: create a classic PAT with "repo" scope, add secret GH_PAGES_TOKEN;
-#    this workflow uses it when set, otherwise GITHUB_TOKEN.
+# One-time repo setup: Settings → Pages → Build and deployment → Source: GitHub Actions
+# (not “Deploy from a branch”). After the first successful run, the site URL appears there.
 
 name: Deploy to GitHub Pages
 
@@ -15,17 +12,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: gh-pages
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -50,11 +47,18 @@ jobs:
         env:
           REACT_APP_MAPBOX_TOKEN: ${{ secrets.REACT_APP_MAPBOX_TOKEN }}
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GH_PAGES_TOKEN || secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          force_orphan: true
-          user_name: github-actions[bot]
-          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
