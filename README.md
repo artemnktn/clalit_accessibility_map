@@ -57,8 +57,7 @@ npm run deploy
 ## Data Sources
 
 - **Clinic POI data** — locations and specialisations
-- **Demographics** — population by age groups
-- **Transport analysis** — walk, drive, and transit travel times
+- **Grid + travel times + population by age** — `clinic_accessibility_matrix_full.geojson` (per cell: `age_*`, `walk_min` / `car_min` / `transit_min`, per-clinic columns); heatmap and **Accessibility by age groups** use this file (specialisation filter uses clinic list from POI GeoJSON)
 
 ## Features Overview
 

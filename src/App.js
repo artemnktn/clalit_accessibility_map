@@ -38,107 +38,58 @@ const AGE_POP_KEY = {
   '65+': 'age_65_plus',
 };
 
-/** Base travel time from cell_min_time_groups for that age cohort (before filter delta). */
-function cellBaseAgeMinutes(cellProps, mode, ageGroup) {
-  const prefix = mode === 'walk' ? 'min_walk' : mode === 'car' ? 'min_car' : 'min_transit';
-  const t1 = Number(cellProps[`${prefix}_1_24`]);
-  const t25 = Number(cellProps[`${prefix}_25`]);
-  const t26 = Number(cellProps[`${prefix}_26`]);
-  if (ageGroup === '0-4' || ageGroup === '5-18') {
-    return t1;
-  }
-  if (ageGroup === '65+') {
-    return t26;
-  }
-  if (!Number.isFinite(t1) || !Number.isFinite(t25) || !Number.isFinite(t26)) {
-    return NaN;
-  }
-  return (t1 + t25 + t26) / 3;
-}
-
-function aggregateAgeCoverageForRange(
-  cellFeatures,
-  matrixByIndex,
+/**
+ * Age-group accessibility from clinic_accessibility_matrix_full.geojson only:
+ * each feature has age_* counts and walk_min / car_min / transit_min (all clinics) plus per-clinic *_min columns.
+ */
+function aggregateAgeCoverageFromMatrix(
+  matrixFeatures,
   filteredClinicIds,
   mode,
   rangeMin,
   ageGroup
 ) {
   const modeKey = mode === 'walk' ? 'WALK' : mode === 'car' ? 'CAR' : 'TRANSIT';
+  const minProp = mode === 'walk' ? 'walk_min' : mode === 'car' ? 'car_min' : 'transit_min';
   const popKey = AGE_POP_KEY[ageGroup];
   let total = 0;
   let accessible = 0;
 
-  for (const f of cellFeatures) {
-    const cp = f.properties || {};
-    const mProps = matrixByIndex.get(cp.index);
-    if (!mProps) continue;
-
-    const pop = Number(cp[popKey]) || 0;
+  for (const f of matrixFeatures) {
+    const mProps = f.properties || {};
+    const pop = Number(mProps[popKey]) || 0;
     if (pop <= 0) continue;
 
-    const baseline = Number(mProps[`${mode}_min`]);
-    if (!Number.isFinite(baseline)) continue;
-
-    let filtered;
+    let travelMin;
     if (filteredClinicIds === null) {
-      filtered = baseline;
+      travelMin = Number(mProps[minProp]);
     } else if (filteredClinicIds.length === 0) {
-      filtered = HEATMAP_NO_SERVICE_MIN;
+      travelMin = HEATMAP_NO_SERVICE_MIN;
     } else {
-      filtered = minTimeAcrossClinics(mProps, filteredClinicIds, modeKey);
+      travelMin = minTimeAcrossClinics(mProps, filteredClinicIds, modeKey);
     }
 
-    const delta = filtered - baseline;
-    const baseAgeTime = cellBaseAgeMinutes(cp, mode, ageGroup);
-    if (!Number.isFinite(baseAgeTime)) continue;
+    if (!Number.isFinite(travelMin)) continue;
 
-    const adjusted = Math.max(0, baseAgeTime + delta);
     total += pop;
-    if (adjusted <= rangeMin) accessible += pop;
+    if (travelMin <= rangeMin) accessible += pop;
   }
 
   const percentage = total > 0 ? Math.round((100 * accessible) / total) : 0;
   return { percentage, total, accessible };
 }
 
-function transformDemographicsAccessibility(data) {
-  const transformedData = {};
-  Object.keys(data).forEach((mode) => {
-    transformedData[mode] = {};
-    Object.keys(data[mode]).forEach((timeRange) => {
-      const rangeNum = parseInt(timeRange.replace('min', ''), 10);
-      transformedData[mode][rangeNum] = {};
-      Object.keys(data[mode][timeRange]).forEach((age) => {
-        transformedData[mode][rangeNum][age] = {
-          percentage: Math.round(data[mode][timeRange][age].percentage),
-          total: data[mode][timeRange][age].total_population,
-          accessible: data[mode][timeRange][age].accessible_population,
-        };
-      });
-    });
-  });
-  return transformedData;
-}
-
-function buildCoverageFromCellAndMatrix(matrixFC, cellFC, selectedSpecializations, clinicSpecIndex) {
-  const matrixByIndex = new Map();
-  for (const f of matrixFC.features || []) {
-    const ix = f.properties?.index;
-    if (ix != null) matrixByIndex.set(ix, f.properties);
-  }
-
+function buildCoverageFromMatrix(matrixFC, selectedSpecializations, clinicSpecIndex) {
   const filteredIds = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
-  const cellFeatures = cellFC.features || [];
+  const matrixFeatures = matrixFC.features || [];
 
   const out = { walk: {}, car: {}, transit: {} };
   for (const mode of COVERAGE_MODES) {
     for (const r of COVERAGE_TIME_RANGES) {
       out[mode][r] = {};
       for (const ageGroup of COVERAGE_AGE_GROUPS) {
-        out[mode][r][ageGroup] = aggregateAgeCoverageForRange(
-          cellFeatures,
-          matrixByIndex,
+        out[mode][r][ageGroup] = aggregateAgeCoverageFromMatrix(
+          matrixFeatures,
           filteredIds,
           mode,
           r,
@@ -220,19 +171,16 @@ function App() {
   const specInputRef = useRef(null);
   const specPanelRef = useRef(null);
   const matrixRawRef = useRef(null);
-  const cellMinTimeRawRef = useRef(null);
   const [matrixReady, setMatrixReady] = useState(false);
-  const [demographicsCoverage, setDemographicsCoverage] = useState(null);
 
-  // Clinics + matrix + cell age/time grid (heatmap + age metrics share filter logic)
+  // Clinics (specialisations) + matrix grid (heatmap + age metrics)
   useEffect(() => {
     const base = process.env.PUBLIC_URL || '';
     Promise.all([
       fetch(`${base}/clinics_final_with_specializations_en_full_final2203.geojson`).then((r) => r.json()),
       fetch(`${base}/clinic_accessibility_matrix_full.geojson`).then((r) => r.json()),
-      fetch(`${base}/cell_min_time_groups.geojson`).then((r) => r.json()),
     ])
-      .then(([clinicData, matrixData, cellData]) => {
+      .then(([clinicData, matrixData]) => {
         const specSet = new Set();
         const index = [];
         for (const f of clinicData.features || []) {
@@ -247,41 +195,21 @@ function App() {
         setAllSpecializations(Array.from(specSet).sort((a, b) => a.localeCompare(b)));
         setClinicSpecIndex(index);
         matrixRawRef.current = matrixData;
-        cellMinTimeRawRef.current = cellData;
         setMatrixReady(true);
       })
       .catch(() => {
         setAllSpecializations([]);
         setClinicSpecIndex([]);
         matrixRawRef.current = null;
-        cellMinTimeRawRef.current = null;
         setMatrixReady(false);
       });
   }, []);
 
-  useEffect(() => {
-    fetch(process.env.PUBLIC_URL + '/demographics_accessibility_otp_FINAL.json')
-      .then((r) => r.json())
-      .then((data) => setDemographicsCoverage(transformDemographicsAccessibility(data)))
-      .catch((error) => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load demographics_accessibility_otp_FINAL.json:', error);
-        setDemographicsCoverage(null);
-      });
-  }, []);
-
+  /** Age-group metrics from clinic_accessibility_matrix_full.geojson only (age_* + walk_min/car_min/transit_min or filtered clinic min). */
   const coverageData = useMemo(() => {
-    if (selectedSpecializations.length > 0) {
-      if (!matrixReady || !matrixRawRef.current || !cellMinTimeRawRef.current) return null;
-      return buildCoverageFromCellAndMatrix(
-        matrixRawRef.current,
-        cellMinTimeRawRef.current,
-        selectedSpecializations,
-        clinicSpecIndex
-      );
-    }
-    return demographicsCoverage;
-  }, [matrixReady, selectedSpecializations, clinicSpecIndex, demographicsCoverage]);
+    if (!matrixReady || !matrixRawRef.current) return null;
+    return buildCoverageFromMatrix(matrixRawRef.current, selectedSpecializations, clinicSpecIndex);
+  }, [matrixReady, selectedSpecializations, clinicSpecIndex]);
 
   // Apply specialization filter to clinic symbol layer
   useEffect(() => {
