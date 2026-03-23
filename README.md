@@ -34,6 +34,24 @@ npm start
 
 5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser (or the path set in `homepage` in `package.json` when using `npm start`).
 
+## GitHub Pages (https://artemnktn.github.io/clalit_accessibility_map/)
+
+The live site is deployed from the **`gh-pages`** branch (static `build/` output), not from `main` directly.
+
+**Automatic deploy:** on every push to `main`, the workflow `.github/workflows/deploy-gh-pages.yml` builds and pushes to `gh-pages`. You must add a repository secret:
+
+1. Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+2. Name: `REACT_APP_MAPBOX_TOKEN` — value: your Mapbox public token (same as in `.env.local`)
+
+Also check **Settings** → **Pages** → **Build and deployment** → source should be **Deploy from a branch**, branch **`gh-pages`**, folder **`/ (root)`**.
+
+**Manual deploy** (from your machine, if you prefer):
+
+```bash
+# .env.local must contain REACT_APP_MAPBOX_TOKEN for a correct map build
+npm run deploy
+```
+
 ## Data Sources
 
 - **Clalit POI Data**: Clinic locations and accessibility metrics
