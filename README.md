@@ -13,7 +13,7 @@ Interactive map of **accessibility to clinics** in Be’er-Sheva, Israel — wal
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/artemnktn/closer-to-care.git
+git clone https://github.com/artemnktn/clalit_accessibility_map.git
 ```
 
 2. Install dependencies:
@@ -34,11 +34,11 @@ npm start
 
 5. Open [http://localhost:3000](http://localhost:3000) in the browser (or the path implied by `homepage` in `package.json` when using `npm start`).
 
-## GitHub Pages (https://artemnktn.github.io/closer-to-care/)
+## GitHub Pages (https://artemnktn.github.io/clalit_accessibility_map/)
 
 The live site is the static **`build/`** output published by GitHub Actions, not `main` as raw source.
 
-**Rename the GitHub repository** (optional but recommended): **Settings** → **General** → **Repository name** → e.g. `closer-to-care`, then update `homepage` in `package.json` if the Pages URL changes.
+**Important:** `homepage` in `package.json` must match the GitHub Pages URL (repo name). If you rename the repository (e.g. to `closer-to-care`), update `homepage` to `https://artemnktn.github.io/<new-repo-name>/` and redeploy.
 
 **Automatic deploy:** on every push to `main`, `.github/workflows/deploy-gh-pages.yml` builds and uploads the artifact. Add a repository secret:
 
