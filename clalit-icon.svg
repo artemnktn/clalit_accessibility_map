@@ -1,0 +1,22 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg-blue { fill: #00AEEF; }
+      .white-circle { fill: #FFFFFF; }
+      .green-shape { fill: #4CAF50; }
+      .blue-shape { fill: #007BFF; }
+    </style>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="48" height="48" rx="8" ry="8" class="bg-blue"/>
+  
+  <!-- White circle in center -->
+  <circle cx="24" cy="24" r="18" class="white-circle"/>
+  
+  <!-- Top green shape (mountain/peak) -->
+  <path d="M 12 20 L 24 12 L 36 20 L 36 22 L 12 22 Z" class="green-shape"/>
+  
+  <!-- Bottom blue shape (valley) -->
+  <path d="M 12 26 L 24 34 L 36 26 L 36 28 L 12 28 Z" class="blue-shape"/>
+</svg>

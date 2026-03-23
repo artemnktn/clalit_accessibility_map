@@ -1,0 +1,488 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.76552976151265, 31.26589393010936]
+      },
+      "properties": {
+        "id": 4,
+        "name": "Neve_Menachem",
+        "neighborhood": "Neve Menachem",
+        "total_points": 11,
+        "healthcare": 2,
+        "education": 0,
+        "food": 5,
+        "services": 0,
+        "retail": 0,
+        "transport": 0,
+        "community": 0,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.80220944775463, 31.2478686225901]
+      },
+      "properties": {
+        "id": 73,
+        "name": "Henrietta_Szold_Regional",
+        "neighborhood": "City Center",
+        "total_points": 71,
+        "healthcare": 3,
+        "education": 1,
+        "food": 8,
+        "services": 11,
+        "retail": 7,
+        "transport": 0,
+        "community": 1,
+        "recreation": 7,
+        "public_services": 0,
+        "other_services": 33
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.80284977196388, 31.24748982785125]
+      },
+      "properties": {
+        "id": 74,
+        "name": "Hashalom",
+        "neighborhood": "City Center",
+        "total_points": 72,
+        "healthcare": 3,
+        "education": 0,
+        "food": 8,
+        "services": 11,
+        "retail": 5,
+        "transport": 1,
+        "community": 1,
+        "recreation": 3,
+        "public_services": 0,
+        "other_services": 40
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7992234279765, 31.24304053237733]
+      },
+      "properties": {
+        "id": 157,
+        "name": "Migdaley_Ha_Rakevet",
+        "neighborhood": "City Center",
+        "total_points": 147,
+        "healthcare": 13,
+        "education": 0,
+        "food": 21,
+        "services": 12,
+        "retail": 16,
+        "transport": 0,
+        "community": 1,
+        "recreation": 4,
+        "public_services": 1,
+        "other_services": 79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.78333660819834, 31.24025904398563]
+      },
+      "properties": {
+        "id": 186,
+        "name": "Smilansky",
+        "neighborhood": "Old City",
+        "total_points": 24,
+        "healthcare": 4,
+        "education": 2,
+        "food": 2,
+        "services": 3,
+        "retail": 0,
+        "transport": 0,
+        "community": 0,
+        "recreation": 0,
+        "public_services": 0,
+        "other_services": 13
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.81439033203805, 31.27485177583858]
+      },
+      "properties": {
+        "id": 529,
+        "name": "Pisgat_Ramot",
+        "neighborhood": "Ramot",
+        "total_points": 8,
+        "healthcare": 1,
+        "education": 0,
+        "food": 1,
+        "services": 0,
+        "retail": 1,
+        "transport": 0,
+        "community": 1,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.79874209194059, 31.28259979579419]
+      },
+      "properties": {
+        "id": 609,
+        "name": "Ramot_Harekess",
+        "neighborhood": "Ramot HaRakes",
+        "total_points": 34,
+        "healthcare": 5,
+        "education": 6,
+        "food": 9,
+        "services": 3,
+        "retail": 2,
+        "transport": 0,
+        "community": 2,
+        "recreation": 3,
+        "public_services": 0,
+        "other_services": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.78184123165929, 31.25097944462849]
+      },
+      "properties": {
+        "id": 781,
+        "name": "Ha_Aliya",
+        "neighborhood": "Neighborhood Hey",
+        "total_points": 42,
+        "healthcare": 2,
+        "education": 1,
+        "food": 10,
+        "services": 7,
+        "retail": 4,
+        "transport": 0,
+        "community": 2,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.80506959660578, 31.27074890983076]
+      },
+      "properties": {
+        "id": 796,
+        "name": "Gershom_Scholem",
+        "neighborhood": "Ramot",
+        "total_points": 19,
+        "healthcare": 2,
+        "education": 5,
+        "food": 2,
+        "services": 0,
+        "retail": 2,
+        "transport": 0,
+        "community": 3,
+        "recreation": 0,
+        "public_services": 0,
+        "other_services": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.79100653044682, 31.24897590572549]
+      },
+      "properties": {
+        "id": 1023,
+        "name": "Kaplan",
+        "neighborhood": "Neighborhood Alef",
+        "total_points": 42,
+        "healthcare": 5,
+        "education": 1,
+        "food": 6,
+        "services": 6,
+        "retail": 3,
+        "transport": 0,
+        "community": 1,
+        "recreation": 1,
+        "public_services": 1,
+        "other_services": 18
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.80944198825313, 31.25703507947327]
+      },
+      "properties": {
+        "id": 1107,
+        "name": "Wingate",
+        "neighborhood": "Neighborhood Gimel",
+        "total_points": 49,
+        "healthcare": 3,
+        "education": 3,
+        "food": 16,
+        "services": 1,
+        "retail": 5,
+        "transport": 1,
+        "community": 1,
+        "recreation": 6,
+        "public_services": 0,
+        "other_services": 13
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.76532741128845, 31.24579831020876]
+      },
+      "properties": {
+        "id": 1245,
+        "name": "Naot_Lon",
+        "neighborhood": "Naot Lon",
+        "total_points": 32,
+        "healthcare": 3,
+        "education": 3,
+        "food": 4,
+        "services": 4,
+        "retail": 1,
+        "transport": 1,
+        "community": 2,
+        "recreation": 4,
+        "public_services": 0,
+        "other_services": 10
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.77701719171335, 31.24577058569093]
+      },
+      "properties": {
+        "id": 1269,
+        "name": "Sderot_Yerushalayim",
+        "neighborhood": "Neighborhood Tet",
+        "total_points": 36,
+        "healthcare": 4,
+        "education": 6,
+        "food": 5,
+        "services": 7,
+        "retail": 1,
+        "transport": 1,
+        "community": 2,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.79079256326084, 31.25401916848574]
+      },
+      "properties": {
+        "id": 1430,
+        "name": "Ben_Yair",
+        "neighborhood": "Neighborhood Bet",
+        "total_points": 168,
+        "healthcare": 7,
+        "education": 1,
+        "food": 23,
+        "services": 24,
+        "retail": 20,
+        "transport": 3,
+        "community": 4,
+        "recreation": 5,
+        "public_services": 0,
+        "other_services": 81
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7922169611081, 31.26441445007181]
+      },
+      "properties": {
+        "id": 1520,
+        "name": "Yizki",
+        "neighborhood": "Neighborhood Dalet",
+        "total_points": 76,
+        "healthcare": 4,
+        "education": 2,
+        "food": 20,
+        "services": 5,
+        "retail": 6,
+        "transport": 1,
+        "community": 2,
+        "recreation": 3,
+        "public_services": 1,
+        "other_services": 32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7995311819146, 31.26710758712397]
+      },
+      "properties": {
+        "id": 1522,
+        "name": "Klausner_Yosef",
+        "neighborhood": "Neighborhood Dalet",
+        "total_points": 52,
+        "healthcare": 2,
+        "education": 4,
+        "food": 24,
+        "services": 4,
+        "retail": 2,
+        "transport": 0,
+        "community": 4,
+        "recreation": 7,
+        "public_services": 0,
+        "other_services": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.79086854343743, 31.23103709046407]
+      },
+      "properties": {
+        "id": 1609,
+        "name": "Shita",
+        "neighborhood": "Neve Noy",
+        "total_points": 20,
+        "healthcare": 2,
+        "education": 4,
+        "food": 1,
+        "services": 1,
+        "retail": 1,
+        "transport": 0,
+        "community": 2,
+        "recreation": 3,
+        "public_services": 2,
+        "other_services": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7753416, 31.2392153]
+      },
+      "properties": {
+        "id": 1678,
+        "name": "Ephraim_Laron",
+        "neighborhood": "Neve Ze'ev",
+        "total_points": 23,
+        "healthcare": 1,
+        "education": 6,
+        "food": 8,
+        "services": 3,
+        "retail": 2,
+        "transport": 0,
+        "community": 0,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.77929786836405, 31.25929899291915]
+      },
+      "properties": {
+        "id": 1867,
+        "name": "Metzada",
+        "neighborhood": "Neighborhood Vav",
+        "total_points": 19,
+        "healthcare": 2,
+        "education": 3,
+        "food": 5,
+        "services": 0,
+        "retail": 1,
+        "transport": 0,
+        "community": 0,
+        "recreation": 1,
+        "public_services": 0,
+        "other_services": 7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.76948587530666, 31.25715127221887]
+      },
+      "properties": {
+        "id": 2050,
+        "name": "Rechovot_Hashla",
+        "neighborhood": "Neighborhood Yod-Alef",
+        "total_points": 46,
+        "healthcare": 6,
+        "education": 4,
+        "food": 5,
+        "services": 5,
+        "retail": 5,
+        "transport": 0,
+        "community": 3,
+        "recreation": 2,
+        "public_services": 2,
+        "other_services": 14
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.80169110000001, 31.2441357]
+      },
+      "properties": {
+        "id": 6037,
+        "name": "Dialysis",
+        "neighborhood": "City Center",
+        "total_points": 41,
+        "healthcare": 1,
+        "education": 0,
+        "food": 7,
+        "services": 9,
+        "retail": 5,
+        "transport": 1,
+        "community": 0,
+        "recreation": 2,
+        "public_services": 1,
+        "other_services": 15
+      }
+    }
+  ]
+}

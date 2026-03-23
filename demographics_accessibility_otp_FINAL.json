@@ -1,0 +1,228 @@
+{
+  "walk": {
+    "10min": {
+      "0-4": {
+        "percentage": 49.29,
+        "accessible_population": 6189,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 50.13,
+        "accessible_population": 20497,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 56.23,
+        "accessible_population": 71349,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 62.75,
+        "accessible_population": 15873,
+        "total_population": 25296
+      }
+    },
+    "15min": {
+      "0-4": {
+        "percentage": 77.34,
+        "accessible_population": 9712,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 78.83,
+        "accessible_population": 32230,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 83.54,
+        "accessible_population": 105997,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 89.1,
+        "accessible_population": 22538,
+        "total_population": 25296
+      }
+    }
+  },
+  "car": {
+    "10min": {
+      "0-4": {
+        "percentage": 99.97,
+        "accessible_population": 12553,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 99.91,
+        "accessible_population": 40850,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 99.91,
+        "accessible_population": 126772,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 99.95,
+        "accessible_population": 25283,
+        "total_population": 25296
+      }
+    },
+    "15min": {
+      "0-4": {
+        "percentage": 100.0,
+        "accessible_population": 12557,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 99.99,
+        "accessible_population": 40882,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 99.97,
+        "accessible_population": 126845,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 99.97,
+        "accessible_population": 25289,
+        "total_population": 25296
+      }
+    },
+    "20min": {
+      "0-4": {
+        "percentage": 100.0,
+        "accessible_population": 12557,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 100.0,
+        "accessible_population": 40887,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 100.0,
+        "accessible_population": 126886,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 100.0,
+        "accessible_population": 25296,
+        "total_population": 25296
+      }
+    },
+    "30min": {
+      "0-4": {
+        "percentage": 100.0,
+        "accessible_population": 12557,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 100.0,
+        "accessible_population": 40887,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 100.0,
+        "accessible_population": 126886,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 100.0,
+        "accessible_population": 25296,
+        "total_population": 25296
+      }
+    }
+  },
+  "transit": {
+    "10min": {
+      "0-4": {
+        "percentage": 70.09,
+        "accessible_population": 8801,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 70.94,
+        "accessible_population": 29005,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 75.62,
+        "accessible_population": 95957,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 81.07,
+        "accessible_population": 20508,
+        "total_population": 25296
+      }
+    },
+    "15min": {
+      "0-4": {
+        "percentage": 89.45,
+        "accessible_population": 11232,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 92.31,
+        "accessible_population": 37741,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 94.7,
+        "accessible_population": 120167,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 97.58,
+        "accessible_population": 24685,
+        "total_population": 25296
+      }
+    },
+    "20min": {
+      "0-4": {
+        "percentage": 98.59,
+        "accessible_population": 12380,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 98.84,
+        "accessible_population": 40412,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 99.13,
+        "accessible_population": 125786,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 99.6,
+        "accessible_population": 25195,
+        "total_population": 25296
+      }
+    },
+    "30min": {
+      "0-4": {
+        "percentage": 100.0,
+        "accessible_population": 12557,
+        "total_population": 12557
+      },
+      "5-18": {
+        "percentage": 100.0,
+        "accessible_population": 40887,
+        "total_population": 40887
+      },
+      "19-64": {
+        "percentage": 99.98,
+        "accessible_population": 126864,
+        "total_population": 126886
+      },
+      "65+": {
+        "percentage": 99.99,
+        "accessible_population": 25293,
+        "total_population": 25296
+      }
+    }
+  }
+}
