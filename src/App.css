@@ -57,11 +57,56 @@
 }
 
 /* Map container should fill the viewport */
+.map-stack {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 0;
+}
+
 .map-container {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 100%;
+}
+
+.map-token-missing {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: linear-gradient(160deg, #dce8f5 0%, #eef4fc 100%);
+  color: #1a202c;
+  font-size: 15px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.map-token-missing-title {
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.map-token-missing-text {
+  margin: 0 0 0.65rem;
+  max-width: 36rem;
+}
+
+.map-token-missing code {
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
 }
 
 /* Left-side control panel */
@@ -818,11 +863,12 @@
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
+  .map-stack,
   .map-container {
     height: 100vh;
     max-height: 100vh;
   }
-  
+
   .side-panel {
     display: none;
   }
@@ -1033,11 +1079,12 @@
 }
 
 @media (max-width: 480px) {
+  .map-stack,
   .map-container {
     height: 100vh;
     max-height: 100vh;
   }
-  
+
   .side-panel {
     position: fixed;
     bottom: 0;

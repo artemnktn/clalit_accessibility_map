@@ -150,6 +150,8 @@ function buildCoverageFromCellAndMatrix(matrixFC, cellFC, selectedSpecialization
   return out;
 }
 
+const MAPBOX_TOKEN = (process.env.REACT_APP_MAPBOX_TOKEN || '').trim();
+
 function buildFilteredHeatmapGeoJSON(rawFC, filteredClinicIds) {
   if (!rawFC?.features) return rawFC;
   if (filteredClinicIds === null) return rawFC;
@@ -377,32 +379,55 @@ function App() {
 
 
   useEffect(() => {
-    mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN || '';
+    if (!MAPBOX_TOKEN) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'REACT_APP_MAPBOX_TOKEN is not set. Add it to .env.local (local) or GitHub Actions secrets (Pages).'
+      );
+      return undefined;
+    }
 
-    const mapInstance = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/artemnktn/cmfaql8ym003q01sdadp15oqe',
-      center: [34.782, 31.258], // Сдвинуто еще левее для оптимального обзора хитмапа
-      zoom: 13,
-      minZoom: 11,
-      maxZoom: 15,
-      // Enable 3D rotation controls
-      dragRotate: true,
-      dragPan: true,
-      scrollZoom: true,
-      boxZoom: true,
-      doubleClickZoom: true,
-      keyboard: true,
-      touchZoomRotate: true,
-      // Enable pitch and bearing controls
-      pitch: 0,
-      bearing: 0,
-    });
+    const el = mapContainerRef.current;
+    if (!el) return undefined;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    let mapInstance;
+    try {
+      mapInstance = new mapboxgl.Map({
+        container: el,
+        style: 'mapbox://styles/artemnktn/cmfaql8ym003q01sdadp15oqe',
+        center: [34.782, 31.258], // Сдвинуто еще левее для оптимального обзора хитмапа
+        zoom: 13,
+        minZoom: 11,
+        maxZoom: 15,
+        // Enable 3D rotation controls
+        dragRotate: true,
+        dragPan: true,
+        scrollZoom: true,
+        boxZoom: true,
+        doubleClickZoom: true,
+        keyboard: true,
+        touchZoomRotate: true,
+        // Enable pitch and bearing controls
+        pitch: 0,
+        bearing: 0,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Mapbox Map failed to initialize:', err);
+      return undefined;
+    }
 
     // Hide map initially to prevent flash of old heatmap
     mapInstance.getContainer().style.visibility = 'hidden';
 
     mapRef.current = mapInstance;
+
+    mapInstance.on('error', (e) => {
+      // eslint-disable-next-line no-console
+      console.error('Map error:', e?.error || e);
+    });
 
     mapInstance.on('load', () => {
       try {
@@ -1425,14 +1450,31 @@ function App() {
 
   return (
     <div className="App">
-      <div 
-        ref={mapContainerRef} 
-        className="map-container" 
-        style={{ 
-          opacity: mapLoaded ? 1 : 0,
-          transition: 'opacity 0.3s ease-in-out'
-        }} 
-      />
+      <div className="map-stack">
+        <div
+          ref={mapContainerRef}
+          className="map-container"
+          style={{
+            opacity: mapLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out',
+          }}
+        />
+        {!MAPBOX_TOKEN ? (
+          <div className="map-token-missing" role="alert">
+            <p className="map-token-missing-title">Map cannot load</p>
+            <p className="map-token-missing-text">
+              Set <code>REACT_APP_MAPBOX_TOKEN</code> to your Mapbox public token (<code>pk.</code>…).
+            </p>
+            <p className="map-token-missing-text">
+              <strong>Local:</strong> copy <code>.env.example</code> → <code>.env.local</code> and add the variable, then restart <code>npm start</code>.
+            </p>
+            <p className="map-token-missing-text">
+              <strong>GitHub Pages:</strong> Repository → Settings → Secrets and variables → Actions → create secret{' '}
+              <code>REACT_APP_MAPBOX_TOKEN</code>, then re-run the deploy workflow.
+            </p>
+          </div>
+        ) : null}
+      </div>
 
       <div className="right-panels">
       <div className="specialization-panel" ref={specPanelRef}>

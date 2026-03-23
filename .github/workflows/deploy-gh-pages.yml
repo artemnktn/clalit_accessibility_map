@@ -28,6 +28,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Require Mapbox token
+        env:
+          MAPBOX_TOKEN: ${{ secrets.REACT_APP_MAPBOX_TOKEN }}
+        run: |
+          if [ -z "$MAPBOX_TOKEN" ]; then
+            echo "::error::Add repository secret REACT_APP_MAPBOX_TOKEN (Mapbox public token, pk.…)"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
         env:
