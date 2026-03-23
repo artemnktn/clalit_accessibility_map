@@ -134,14 +134,14 @@
   font-family: var(--panel-font);
 }
 
-/* Age group metrics — left column, below main control card */
+/* Age group metrics — right column, below specialisation panel */
 .age-card-below {
   position: relative;
   top: auto;
   left: auto;
   right: auto;
   width: 100%;
-  margin-top: 14px;
+  margin-top: 0;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
@@ -296,22 +296,27 @@
   color: #0c4a6e;
 }
 
-.ranges-row {
+.ranges-block {
   display: flex;
+  flex-direction: column;
   gap: 10px;
-  justify-content: space-between;
-  align-items: center;
   width: 100%;
   min-width: 0;
 }
 
 .ranges-row-buttons {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
-  flex: 1;
+  width: 100%;
   min-width: 0;
   align-items: center;
+}
+
+.ranges-row-3d {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .range-btn {
@@ -419,6 +424,7 @@
 .legend {
   position: absolute;
   right: 20px;
+  left: auto;
   bottom: 40px;
   width: 320px;
   max-width: calc(100% - 40px);
@@ -564,14 +570,20 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--panel-card-radius);
-  padding: 20px 24px;
-  max-width: 300px;
+  padding: 12px 16px;
+  max-width: 256px;
   overflow: visible;
   box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.05);
   pointer-events: auto;
   transform: translate(-50%, -100%);
   margin-top: -10px;
   font-family: var(--panel-font);
+  font-size: var(--panel-body-size);
+  line-height: var(--panel-body-lh);
+  letter-spacing: var(--panel-body-track);
+  color: var(--panel-body-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-align: left;
 }
 
@@ -584,14 +596,15 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .popup-header h3 {
   margin: 0;
   color: var(--panel-heading-color);
+  font-family: var(--panel-font);
   font-size: var(--panel-heading-size);
   font-weight: var(--panel-heading-weight);
   letter-spacing: var(--panel-heading-track);
@@ -600,6 +613,7 @@
 
 .popup-neighborhood {
   margin: 4px 0 0 0;
+  font-family: var(--panel-font);
   font-size: var(--panel-muted-size);
   font-weight: 500;
   color: var(--panel-muted-color);
@@ -609,6 +623,7 @@
 
 .popup-subtitle {
   margin: 4px 0 0 0;
+  font-family: var(--panel-font);
   color: var(--panel-body-color);
   font-size: var(--panel-body-size);
   font-weight: 400;
@@ -624,12 +639,15 @@
 .popup-close {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 20px;
+  font-family: var(--panel-font);
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   color: #666;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -649,9 +667,10 @@
 }
 
 .popup-row {
-  margin-bottom: 8px;
-  padding: 4px 0;
+  margin-bottom: 6px;
+  padding: 2px 0;
   border-bottom: 1px solid #f5f5f5;
+  font-family: var(--panel-font);
   font-size: var(--panel-body-size);
   line-height: var(--panel-body-lh);
   color: var(--panel-body-color);
@@ -668,12 +687,61 @@
   margin-right: 8px;
 }
 
+/* Heatmap click tooltip (created in JS) — same typography as panels */
+.custom-heatmap-popup {
+  position: absolute;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--panel-control-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 10px 14px;
+  font-family: var(--panel-font);
+  font-size: var(--panel-body-size);
+  font-weight: 500;
+  line-height: var(--panel-body-lh);
+  letter-spacing: var(--panel-body-track);
+  color: var(--panel-body-color);
+  text-align: left;
+  min-width: 120px;
+  max-width: 220px;
+  z-index: 1000;
+  pointer-events: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.custom-heatmap-popup-line {
+  font-family: var(--panel-font);
+  font-size: var(--panel-body-size);
+  line-height: var(--panel-body-lh);
+  letter-spacing: var(--panel-body-track);
+  color: var(--panel-body-color);
+  text-align: left;
+}
+
+.custom-heatmap-popup-line + .custom-heatmap-popup-line {
+  margin-top: 4px;
+}
+
 /* Pie Chart styles */
 .pie-chart-container {
   display: flex;
   align-items: center;
   gap: 16px;
   margin: 12px 0;
+}
+
+.popup-body .pie-chart-container {
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.popup-body .pie-legend {
+  font-family: var(--panel-font);
 }
 
 .pie-chart {
@@ -935,6 +1003,7 @@
   .legend {
     position: fixed;
     right: 16px;
+    left: auto;
     bottom: 20px;
     width: calc(100% - 32px);
     max-width: 320px;
@@ -985,9 +1054,12 @@
     min-width: 0;
   }
 
-  .ranges-row {
-    gap: 4px;
-    flex-wrap: wrap;
+  .ranges-block {
+    gap: 8px;
+  }
+
+  .ranges-row-buttons {
+    gap: 8px;
   }
 
   .range-btn {
@@ -1167,7 +1239,11 @@
     font-size: 14px;
   }
 
-  .ranges-row {
+  .ranges-block {
+    gap: 6px;
+  }
+
+  .ranges-row-buttons {
     gap: 6px;
   }
 
@@ -1206,6 +1282,7 @@
   .legend {
     position: fixed;
     right: 12px;
+    left: auto;
     bottom: 16px;
     width: calc(100% - 24px);
     max-width: 300px;

@@ -195,7 +195,7 @@ function App() {
   const [mode, setMode] = useState('walk');
   const [rangeMin, setRangeMin] = useState(15);
   const [mapLoaded, setMapLoaded] = useState(false);
-  // Use the exact layer id from your style (lowercase)
+  /** Ids of layers in the hosted Mapbox style — must match Studio; do not rename without updating the style. */
   const poiLayerId = 'clalit-poi-200-1898zd';
   const heatmapLayerId = 'clalit-accessibility-heatmap-3v21at';
 
@@ -286,20 +286,20 @@ function App() {
   // Apply specialization filter to clinic symbol layer
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !poiSymbolLayerReady || !map.getLayer('clalit-poi-icons')) return;
+    if (!map || !poiSymbolLayerReady || !map.getLayer('care-poi-icons')) return;
     const baseFilter = ['==', ['geometry-type'], 'Point'];
     if (!selectedSpecializations.length) {
       try {
-        map.setFilter('clalit-poi-icons', baseFilter);
+        map.setFilter('care-poi-icons', baseFilter);
       } catch (_) {}
       return;
     }
     const ids = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
     try {
       if (ids.length === 0) {
-        map.setFilter('clalit-poi-icons', ['all', baseFilter, ['==', ['get', 'clinic_id'], '__none__']]);
+        map.setFilter('care-poi-icons', ['all', baseFilter, ['==', ['get', 'clinic_id'], '__none__']]);
       } else {
-        map.setFilter('clalit-poi-icons', ['all', baseFilter, ['in', ['get', 'clinic_id'], ['literal', ids]]]);
+        map.setFilter('care-poi-icons', ['all', baseFilter, ['in', ['get', 'clinic_id'], ['literal', ids]]]);
       }
     } catch (_) {}
   }, [selectedSpecializations, clinicSpecIndex, poiSymbolLayerReady]);
@@ -321,7 +321,7 @@ function App() {
     const map = mapRef.current;
     if (!map || !mapLoaded || !matrixReady || !matrixRawRef.current) return;
     try {
-      const src = map.getSource('clalit-accessibility-heatmap-new');
+      const src = map.getSource('care-accessibility-heatmap-new');
       if (!src || typeof src.setData !== 'function') return;
       const filteredIds = getClinicIdsForSpecializations(selectedSpecializations, clinicSpecIndex);
       const data = buildFilteredHeatmapGeoJSON(matrixRawRef.current, filteredIds);
@@ -460,23 +460,23 @@ function App() {
 
       // Load custom icon for POI layer
       const loadCustomIcon = () => {
-        if (!mapInstance.hasImage('clalit-icon')) {
+        if (!mapInstance.hasImage('care-clinic-icon')) {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => {
             try { 
-              mapInstance.addImage('clalit-icon', img, { pixelRatio: 2 }); 
+              mapInstance.addImage('care-clinic-icon', img, { pixelRatio: 2 }); 
               // Create symbol layer for updated POI points
-              const symbolLayerId = 'clalit-poi-icons';
+              const symbolLayerId = 'care-poi-icons';
               try {
                 if (!mapInstance.getLayer(symbolLayerId)) {
                   mapInstance.addLayer({
                     id: symbolLayerId,
                     type: 'symbol',
-                    source: 'clalit-poi-updated',
+                    source: 'care-poi-updated',
                     filter: ['==', ['geometry-type'], 'Point'],
                     layout: {
-                      'icon-image': 'clalit-icon',
+                      'icon-image': 'care-clinic-icon',
                       'icon-size': 0.8,
                       'icon-allow-overlap': true,
                       'icon-ignore-placement': true,
@@ -503,8 +503,8 @@ function App() {
                       const point = mapInstance.project(e.lngLat);
                       
                       // Get popup dimensions (approximate)
-                      const popupWidth = 300;
-                      const popupHeight = 200;
+                      const popupWidth = 256;
+                      const popupHeight = 175;
                       const margin = 20;
                       
                       // Calculate adjusted position to keep popup within screen bounds
@@ -559,9 +559,9 @@ function App() {
           };
           img.onerror = () => {
             // eslint-disable-next-line no-console
-            console.warn('Failed to load clalit-icon.svg. Place it in public/.');
+            console.warn('Failed to load care-clinic-icon.svg. Place it in public/.');
           };
-          img.src = process.env.PUBLIC_URL + '/clalit-icon.svg';
+          img.src = process.env.PUBLIC_URL + '/care-clinic-icon.svg';
         }
       };
 
@@ -578,24 +578,24 @@ function App() {
           }
           
           // Remove old source if it exists
-          if (mapInstance.getSource('clalit-accessibility-heatmap-new')) {
-            mapInstance.removeSource('clalit-accessibility-heatmap-new');
+          if (mapInstance.getSource('care-accessibility-heatmap-new')) {
+            mapInstance.removeSource('care-accessibility-heatmap-new');
           }
           
           // Add new GeoJSON source for heatmap
-          mapInstance.addSource('clalit-accessibility-heatmap-new', {
+          mapInstance.addSource('care-accessibility-heatmap-new', {
             type: 'geojson',
             data: process.env.PUBLIC_URL + '/clinic_accessibility_matrix_full.geojson'
           });
 
           // Add new GeoJSON source for updated clinic data
-          mapInstance.addSource('clalit-poi-updated', {
+          mapInstance.addSource('care-poi-updated', {
             type: 'geojson',
             data: process.env.PUBLIC_URL + '/clinics_final_with_specializations_en_full_final2203.geojson'
           });
           
           // Create new heatmap layer using the new data source
-          const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+          const newHeatmapLayerId = 'care-accessibility-heatmap-new';
           if (!mapInstance.getLayer(newHeatmapLayerId)) {
             // Use dynamic column based on current mode and range
             const column = `${mode}_min`;
@@ -604,7 +604,7 @@ function App() {
             mapInstance.addLayer({
               id: newHeatmapLayerId,
               type: 'fill',
-              source: 'clalit-accessibility-heatmap-new',
+              source: 'care-accessibility-heatmap-new',
               filter: [
                 'all',
                 ['>', ['coalesce', ['to-number', ['get', column]], 0], 0],
@@ -643,7 +643,7 @@ function App() {
       
       // Add heatmap click handlers
       const addHeatmapClickHandlers = () => {
-        const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+        const currentHeatmapLayerId = 'care-accessibility-heatmap-new';
         
         // Remove any existing popups first
         const existingPopups = document.querySelectorAll('.mapboxgl-popup');
@@ -654,7 +654,7 @@ function App() {
           // Check if click was on a clinic icon - if so, don't show heatmap popup
           const allFeatures = mapInstance.queryRenderedFeatures(e.point);
           const hasClinicFeature = allFeatures.some(feature => 
-            feature.layer && feature.layer.id === 'clalit-poi-icons'
+            feature.layer && feature.layer.id === 'care-poi-icons'
           );
           
           if (hasClinicFeature) {
@@ -689,31 +689,10 @@ function App() {
               // Create custom popup element
               const popupElement = document.createElement('div');
               popupElement.className = 'custom-heatmap-popup';
-              popupElement.style.cssText = `
-                position: absolute;
-                left: ${point.x}px;
-                top: ${point.y - 60}px;
-                transform: translateX(-50%);
-                background: rgba(255, 255, 255, 0.25);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 12px;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
-                padding: 12px 16px;
-                font-size: 14px;
-                font-weight: 600;
-                color: #333;
-                text-align: left;
-                min-width: 140px;
-                max-width: 200px;
-                z-index: 1000;
-                pointer-events: none;
-                user-select: none;
-              `;
+              popupElement.style.cssText = `left: ${point.x}px; top: ${point.y - 52}px;`;
               popupElement.innerHTML = `
-                <div style="font-size: 14px; margin-bottom: 4px; text-align: left;">${Math.round(density)} people</div>
-                <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic</div>
+                <div class="custom-heatmap-popup-line">${Math.round(density)} people</div>
+                <div class="custom-heatmap-popup-line">${minutes} min to closest clinic</div>
               `;
               
               // Add to map container
@@ -739,7 +718,7 @@ function App() {
       setTimeout(() => {
         try {
           // Use the new heatmap layer only
-          const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+          const currentHeatmapLayerId = 'care-accessibility-heatmap-new';
           const heatLayer = mapInstance.getLayer(currentHeatmapLayerId);
         if (heatLayer) {
           const column = `${mode}_min`;
@@ -803,8 +782,8 @@ function App() {
         const features = mapInstance.queryRenderedFeatures(e.point);
         const hasLayerFeatures = features.some(feature => 
           feature.layer && (
-            feature.layer.id === 'clalit-poi-icons' || 
-            feature.layer.id === 'clalit-accessibility-heatmap-new' ||
+            feature.layer.id === 'care-poi-icons' || 
+            feature.layer.id === 'care-accessibility-heatmap-new' ||
             feature.layer.id === 'clalit-accessibility-heatmap-3v21at'
           )
         );
@@ -834,7 +813,7 @@ function App() {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
     
-    const symbolLayerId = 'clalit-poi-icons';
+    const symbolLayerId = 'care-poi-icons';
     if (map.getLayer(symbolLayerId)) {
       const pulse = Math.sin(pulseValue);
       const size = 0.8 + (pulse * 0.1);
@@ -851,7 +830,7 @@ function App() {
     const nextVisible = !poiVisible;
     
     // Toggle symbol layer if it exists, otherwise toggle original layer
-    const symbolLayerId = 'clalit-poi-icons';
+    const symbolLayerId = 'care-poi-icons';
     let layerToToggle = poiLayerId;
     
     try {
@@ -999,7 +978,7 @@ function App() {
     }
     
     // Use new heatmap layer only (old layer should be removed)
-    const newHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+    const newHeatmapLayerId = 'care-accessibility-heatmap-new';
     const currentHeatmapLayerId = newHeatmapLayerId;
     
     // Check if layer exists before trying to access it
@@ -1139,7 +1118,7 @@ function App() {
           if (!map.getLayer(extrusionLayerId)) {
             try {
               // For new layer, use the new source directly
-              const sourceId = currentHeatmapLayerId === 'clalit-accessibility-heatmap-new' ? 'clalit-accessibility-heatmap-new' : heatLayer.source;
+              const sourceId = currentHeatmapLayerId === 'care-accessibility-heatmap-new' ? 'care-accessibility-heatmap-new' : heatLayer.source;
               const source = map.getSource(sourceId);
               // eslint-disable-next-line no-console
               console.log('Source ID:', sourceId, 'Source exists:', !!source);
@@ -1165,7 +1144,7 @@ function App() {
                 console.log('Successfully created 3D extrusion layer:', extrusionLayerId);
                 
                 // Move POI layer above 3D extrusion layer
-                const symbolLayerId = 'clalit-poi-icons';
+                const symbolLayerId = 'care-poi-icons';
                 if (map.getLayer(symbolLayerId)) {
                   try {
                     map.moveLayer(symbolLayerId);
@@ -1197,7 +1176,7 @@ function App() {
               console.log('Successfully updated 3D layer properties');
               
               // Ensure POI layer is above 3D extrusion layer
-              const symbolLayerId = 'clalit-poi-icons';
+              const symbolLayerId = 'care-poi-icons';
               if (map.getLayer(symbolLayerId)) {
                 try {
                   map.moveLayer(symbolLayerId);
@@ -1302,7 +1281,7 @@ function App() {
     
     // Update click handlers when mode or range changes
     const updateClickHandlers = () => {
-      const currentHeatmapLayerId = 'clalit-accessibility-heatmap-new';
+      const currentHeatmapLayerId = 'care-accessibility-heatmap-new';
       
       // Remove existing handlers
       map.off('click', currentHeatmapLayerId);
@@ -1320,7 +1299,7 @@ function App() {
         // Check if click was on a clinic icon - if so, don't show heatmap popup
         const allFeatures = map.queryRenderedFeatures(e.point);
         const hasClinicFeature = allFeatures.some(feature => 
-          feature.layer && feature.layer.id === 'clalit-poi-icons'
+          feature.layer && feature.layer.id === 'care-poi-icons'
         );
         
         if (hasClinicFeature) {
@@ -1360,31 +1339,10 @@ function App() {
             // Create custom popup element
             const popupElement = document.createElement('div');
             popupElement.className = 'custom-heatmap-popup';
-            popupElement.style.cssText = `
-              position: absolute;
-              left: ${point.x}px;
-              top: ${point.y - 60}px;
-              transform: translateX(-50%);
-              background: rgba(255, 255, 255, 0.25);
-              backdrop-filter: blur(20px);
-              -webkit-backdrop-filter: blur(20px);
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              border-radius: 12px;
-              box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
-              padding: 12px 16px;
-              font-size: 14px;
-              font-weight: 600;
-              color: #333;
-              text-align: left;
-              min-width: 140px;
-              max-width: 200px;
-              z-index: 1000;
-              pointer-events: none;
-              user-select: none;
-            `;
+            popupElement.style.cssText = `left: ${point.x}px; top: ${point.y - 52}px;`;
             popupElement.innerHTML = `
-              <div style="font-size: 14px; margin-bottom: 4px; text-align: left;">${Math.round(density)} people</div>
-              <div style="font-size: 14px; text-align: left;">${minutes} min to closest clinic${safeSpec ? ` — ${safeSpec}` : ''}</div>
+              <div class="custom-heatmap-popup-line">${Math.round(density)} people</div>
+              <div class="custom-heatmap-popup-line">${minutes} min to closest clinic${safeSpec ? ` — ${safeSpec}` : ''}</div>
             `;
             
             // Add to map container
@@ -1579,12 +1537,62 @@ function App() {
           ) : null}
         </div>
       </div>
+
+        <div className="age-card-below">
+          <div className="section-title">Accessibility by age groups</div>
+
+          <div className="age-buttons">
+            {['0-4', '5-18', '19-64', '65+'].map((g) => (
+              <button
+                key={g}
+                className={`age-btn ${ageGroup === g ? 'active' : ''}`}
+                onClick={() => setAgeGroup(g)}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+
+          <div className="age-body">
+            {(() => {
+              if (!coverageData) {
+                return <p className="card-text">Loading data...</p>;
+              }
+
+              const data = coverageData[mode]?.[rangeMin]?.[ageGroup];
+              if (!data) return null;
+
+              const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
+
+              let modeText;
+              if (mode === 'walk') {
+                modeText = `walk to a clinic in ${rangeMin} min`;
+              } else if (mode === 'car') {
+                modeText = `drive to a clinic in ${rangeMin} min`;
+              } else if (mode === 'transit') {
+                modeText = `reach a clinic by public transport in ${rangeMin} min`;
+              }
+
+              return (
+                <>
+                  <p className="card-text card-text--emphasis">
+                    {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeText}.
+                  </p>
+                  <p className="card-text">
+                    This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+
       </div>
 
       <div className="side-panel">
         <div className="control-card">
         <h1 className="card-title">Closer to Care</h1>
-        <p className="card-subtitle">Mapping accessibility to Clalit's clinics</p>
+        <p className="card-subtitle">Mapping accessibility to clinics in Be&apos;er-Sheva</p>
         <div className="divider" />
         <div className="row">
           <div className="section-title" style={{ textAlign: 'center', marginTop: '8px' }}>
@@ -1654,7 +1662,7 @@ function App() {
           </button>
         </div>
 
-        <div className="ranges-row">
+        <div className="ranges-block">
           <div className="ranges-row-buttons">
             {(() => {
               // Define available time ranges for each transport mode
@@ -1677,81 +1685,32 @@ function App() {
               ));
             })()}
           </div>
-          
-          {/* 3D Toggle Button - centered on the right */}
-          <button
-            type="button"
-            className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
-            onClick={toggle3D}
-            title="Toggle 3D extrusion"
-          >
-            <span className="legend-3d-text">3D</span>
-          </button>
-        </div>
-
-        </div>
-
-        <div className="age-card-below">
-          <div className="section-title">Accessibility metrics by age groups</div>
-
-          <div className="age-buttons">
-            {['0-4', '5-18', '19-64', '65+'].map((g) => (
-              <button
-                key={g}
-                className={`age-btn ${ageGroup === g ? 'active' : ''}`}
-                onClick={() => setAgeGroup(g)}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-
-          <div className="age-body">
-            {(() => {
-              if (!coverageData) {
-                return <p className="card-text">Loading data...</p>;
-              }
-
-              const data = coverageData[mode]?.[rangeMin]?.[ageGroup];
-              if (!data) return null;
-
-              const ageLabel = ageGroup === '0-4' ? 'children' : ageGroup === '5-18' ? 'children' : ageGroup === '19-64' ? 'adults' : 'seniors';
-
-              let modeText;
-              if (mode === 'walk') {
-                modeText = `walk to a Clalit Clinic in ${rangeMin}min`;
-              } else if (mode === 'car') {
-                modeText = `Drive to a Clalit Clinic in ${rangeMin}min`;
-              } else if (mode === 'transit') {
-                modeText = `get to a Clalit Clinic by Public Transport in ${rangeMin}min`;
-              }
-
-              return (
-                <>
-                  <p className="card-text card-text--emphasis">
-                    {data.percentage}% of {ageLabel} in Be'er-Sheva can {modeText}.
-                  </p>
-                  <p className="card-text">
-                    This means that {data.accessible.toLocaleString()} {ageLabel} in Be'er-Sheva have access, out of {data.total.toLocaleString()} {ageLabel}
-                  </p>
-                </>
-              );
-            })()}
-          </div>
-
-          <div className="divider" />
-
-          <div className="card-text" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>in collaboration with</span>
-            <a
-              href="https://www.nurlab.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="nur-logo-link"
+          <div className="ranges-row-3d">
+            <button
+              type="button"
+              className={`legend-3d-btn ${is3DMode ? 'active' : ''}`}
+              onClick={toggle3D}
+              title="Toggle 3D extrusion"
             >
-              <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
-            </a>
+              <span className="legend-3d-text">3D</span>
+            </button>
           </div>
+        </div>
+
+        <div className="divider" />
+
+        <div className="card-text control-card-collab" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>in collaboration with</span>
+          <a
+            href="https://www.nurlab.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nur-logo-link"
+          >
+            <img src={process.env.PUBLIC_URL + "/nur-logo.png"} alt="Negev Urban Research" className="age-logo" />
+          </a>
+        </div>
+
         </div>
 
       </div>
@@ -1832,7 +1791,7 @@ function App() {
                   </>
                 ) : (
                   <div className="pie-chart-container">
-                    <svg width="120" height="120" className="pie-chart">
+                    <svg width="100" height="100" className="pie-chart">
                       {(() => {
                         const categories = ['retail', 'services', 'public_services', 'recreation', 'community', 'education', 'food', 'healthcare', 'transport'];
                         const colors = ['#D43D4C', '#ED6842', '#FDDD80', '#AFDCA2', '#5AA379', '#00BAA7', '#4555CA', '#614E9E', '#280D7D'];
@@ -1853,9 +1812,9 @@ function App() {
                           const endAngle = currentAngle + angle;
                           currentAngle += angle;
 
-                          const radius = 50;
-                          const centerX = 60;
-                          const centerY = 60;
+                          const radius = 42;
+                          const centerX = 50;
+                          const centerY = 50;
 
                           const startAngleRad = (startAngle - 90) * Math.PI / 180;
                           const endAngleRad = (endAngle - 90) * Math.PI / 180;
@@ -1867,7 +1826,7 @@ function App() {
 
                           const largeArcFlag = angle > 180 ? 1 : 0;
 
-                          const innerRadius = 20;
+                          const innerRadius = 17;
                           const innerStartAngleRad = (startAngle - 90) * Math.PI / 180;
                           const innerEndAngleRad = (endAngle - 90) * Math.PI / 180;
 

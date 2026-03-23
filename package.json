@@ -1,8 +1,8 @@
 {
-  "name": "clalit-accessibility-map",
+  "name": "closer-to-care",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://artemnktn.github.io/clalit_accessibility_map",
+  "homepage": "https://artemnktn.github.io/closer-to-care",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",

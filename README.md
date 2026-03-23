@@ -1,19 +1,19 @@
-# Clalit Clinic Accessibility Map
+# Closer to Care
 
-Interactive map application showing accessibility to Clalit clinics in Be'er-Sheva, Israel.
+Interactive map of **accessibility to clinics** in Be’er-Sheva, Israel — walking, driving, and public transport.
 
 ## Technology Stack
 
-- **React.js** - Frontend framework
-- **Mapbox GL JS** - Interactive mapping
-- **CSS3** - Glassmorphism styling
-- **JSON** - Data integration
+- **React.js** — frontend
+- **Mapbox GL JS** — map
+- **CSS3** — UI styling
+- **JSON / GeoJSON** — data
 
 ## Getting Started
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/artemnktn/clalit_accessibility_map.git
+git clone https://github.com/artemnktn/closer-to-care.git
 ```
 
 2. Install dependencies:
@@ -32,18 +32,20 @@ Edit `.env.local` and set `REACT_APP_MAPBOX_TOKEN` to your [Mapbox public access
 npm start
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser (or the path set in `homepage` in `package.json` when using `npm start`).
+5. Open [http://localhost:3000](http://localhost:3000) in the browser (or the path implied by `homepage` in `package.json` when using `npm start`).
 
-## GitHub Pages (https://artemnktn.github.io/clalit_accessibility_map/)
+## GitHub Pages (https://artemnktn.github.io/closer-to-care/)
 
-The live site is the static **`build/`** output published by GitHub Actions (official **Deploy to GitHub Pages** flow), not `main` as raw source.
+The live site is the static **`build/`** output published by GitHub Actions, not `main` as raw source.
+
+**Rename the GitHub repository** (optional but recommended): **Settings** → **General** → **Repository name** → e.g. `closer-to-care`, then update `homepage` in `package.json` if the Pages URL changes.
 
 **Automatic deploy:** on every push to `main`, `.github/workflows/deploy-gh-pages.yml` builds and uploads the artifact. Add a repository secret:
 
 1. Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 2. Name: `REACT_APP_MAPBOX_TOKEN` — value: your Mapbox public token (same as in `.env.local`)
 
-**Pages source (required once):** **Settings** → **Pages** → **Build and deployment** → source **GitHub Actions** (not “Deploy from a branch”).
+**Pages source (required once):** **Settings** → **Pages** → **Build and deployment** → source **GitHub Actions**.
 
 **Manual deploy** (pushes to the `gh-pages` branch from your machine, if you prefer):
 
@@ -54,25 +56,28 @@ npm run deploy
 
 ## Data Sources
 
-- **Clalit POI Data**: Clinic locations and accessibility metrics
-- **Demographics Data**: Population statistics by age groups
-- **Transport Analysis**: Walking, driving, and transit accessibility
+- **Clinic POI data** — locations and specialisations
+- **Demographics** — population by age groups
+- **Transport analysis** — walk, drive, and transit travel times
 
 ## Features Overview
 
 ### Map Interface
+
 - Toggle clinic visibility
-- Custom Clalit icons
-- Zoom to Be'er-Sheva area
+- Custom clinic markers
+- Focus on Be’er-Sheva area
 
 ### Accessibility Analysis
-- Real-time filtering by transport mode
-- Dynamic range selection
+
+- Filtering by transport mode
+- Dynamic time threshold
 - Age-specific coverage statistics
 
 ### UI/UX
-- Mobile-optimized interface
-- Intuitive controls and legends
+
+- Mobile-friendly layout
+- Controls and legends aligned with the map
 
 ## Collaboration
 

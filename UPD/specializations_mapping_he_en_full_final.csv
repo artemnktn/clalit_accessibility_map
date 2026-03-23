@@ -1,4 +1,4 @@
-﻿specialization_hebrew,specialization_english,specialization_group
+specialization_hebrew,specialization_english,specialization_group
 אבחון התפתחות הילד,Child development assessment,developmental_peds
 אודיולוגיה - בדיקת שמיעה,Audiology - hearing test,audiology
 אולטרסאונד זקיקים,Follicular ultrasound,ob_ultrasound
@@ -90,7 +90,7 @@
 ניתוחים כירורגיים,Surgical operations,surgery
 ניתוחים פלסטיים,Plastic surgery,surgery_plastic
 נפרולוגיה ילדים,Pediatric nephrology,nephrology_peds
-נשים,Obstetrics and gynecology,women_health
+נשים,Gynecology,women_health
 נשים - מיון,Emergency medicine,emergency
 נשים - פוריות,Fertility clinic (women),fertility
 סוכרת,Diabetes clinic,diabetes_clinic

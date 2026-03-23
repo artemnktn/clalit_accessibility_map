@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+/**
+ * Full App test would require mocking Mapbox GL / WebGL in jsdom.
+ * Smoke-check package identity after rebrand.
+ */
+test('package name is Closer to Care project slug', () => {
+  // eslint-disable-next-line global-require
+  expect(require('../package.json').name).toBe('closer-to-care');
 });
