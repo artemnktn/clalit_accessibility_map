@@ -1,5 +1,6 @@
 # Clalit Clinic Accessibility Map
 
+Interactive map application showing accessibility to Clalit clinics in Be'er-Sheva, Israel.
 
 ## Technology Stack
 
@@ -35,16 +36,16 @@ npm start
 
 ## GitHub Pages (https://artemnktn.github.io/clalit_accessibility_map/)
 
-The live site is deployed from the **`gh-pages`** branch (static `build/` output), not from `main` directly.
+The live site is the static **`build/`** output published by GitHub Actions (official **Deploy to GitHub Pages** flow), not `main` as raw source.
 
-**Automatic deploy:** on every push to `main`, the workflow `.github/workflows/deploy-gh-pages.yml` builds and pushes to `gh-pages`. You must add a repository secret:
+**Automatic deploy:** on every push to `main`, `.github/workflows/deploy-gh-pages.yml` builds and uploads the artifact. Add a repository secret:
 
 1. Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 2. Name: `REACT_APP_MAPBOX_TOKEN` — value: your Mapbox public token (same as in `.env.local`)
 
-Also check **Settings** → **Pages** → **Build and deployment** → source should be **Deploy from a branch**, branch **`gh-pages`**, folder **`/ (root)`**.
+**Pages source (required once):** **Settings** → **Pages** → **Build and deployment** → source **GitHub Actions** (not “Deploy from a branch”).
 
-**Manual deploy** (from your machine, if you prefer):
+**Manual deploy** (pushes to the `gh-pages` branch from your machine, if you prefer):
 
 ```bash
 # .env.local must contain REACT_APP_MAPBOX_TOKEN for a correct map build
