@@ -1,6 +1,5 @@
 # Clalit Clinic Accessibility Map
 
-Interactive map application showing accessibility to Clalit clinics in Be'er-Sheva, Israel.
 
 ## Technology Stack
 
