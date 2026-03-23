@@ -1,6 +1,6 @@
 # Closer to Care
 
-Interactive map of **accessibility to clinics** in Be’er-Sheva, Israel — walking, driving, and public transport.
+Interactive map of **accessibility to clinics** in Be’er-Sheva — walking, driving, and public transport.
 
 ## Technology Stack
 
